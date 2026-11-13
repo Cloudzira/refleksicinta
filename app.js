@@ -110,7 +110,13 @@
      ========================================================== */
   function body(i, mode) {
     var h = '';
-    if (i === 0) {
+    if (i === -1) {
+      h += '<div style="margin:auto 0;display:flex;flex-direction:column;gap:16px;align-items:center;text-align:center">' +
+        '<div class="eyebrow">Jurnal ini milik</div>' +
+        '<input class="line-input owner-in" type="text" maxlength="60" autocomplete="name" data-k="name" value="' + esc(S.name || '') + '" placeholder="Tulis namamu…" aria-label="Jurnal ini milik">' +
+        '<div class="divider"></div>' +
+        '<p class="small">Geser ke kiri atau ketuk › untuk mulai. Namamu juga tampil di halaman “Catatan penting”.</p></div>';
+    } else if (i === 0) {
       h += '<div class="eyebrow">Sebelum mulai</div><h2 class="h1">Cara memakainya</h2><div class="divider"></div>';
       h += '<ol class="steps">' +
         '<li><b>1</b><span>Sediakan 10–15 menit setiap hari, di waktu yang paling tenang bagimu.</span></li>' +
@@ -197,12 +203,12 @@
     return FIT[i];
   }
   function wrap(i, side, mode) {
-    var cls = 'page ' + (side === 'l' ? 'l' : 'r') + (mode === 'print' ? ' print' : '');
+    var cls = 'page ' + (side === 'l' ? 'l' : 'r') + (mode === 'print' ? ' print' : '') + (i === -1 ? ' ownerp' : '');
     var fu = (mode === 'print' || mode === 'probe') ? null : fitU(i);
     return '<section class="' + cls + '" data-p="' + i + '"' + (fu ? ' style="--u:' + fu + '"' : '') + '>' +
       '<svg class="brush ' + (side === 'l' ? 'bl' : 'tr') + '" aria-hidden="true"><use href="#brushTR"/></svg>' +
       '<div class="pin' + (TIGHT[i] ? ' tight' : '') + '">' + body(i, mode) + '</div>' +
-      '<div class="pfoot">kurniapedia · ' + (i + 1) + '</div></section>';
+      '<div class="pfoot">kurniapedia' + (i >= 0 ? ' · ' + (i + 1) : '') + '</div></section>';
   }
 
   /* ==========================================================
@@ -228,7 +234,7 @@
     FIT = {};
   }
   function spreadOf(p) { return p === 0 ? 0 : Math.ceil(p / 2); }
-  function norm(p) { p = Math.max(0, Math.min(N - 1, p)); if (single) return p; var s = spreadOf(p); return s === 0 ? 0 : 2 * s - 1; }
+  function norm(p) { p = Math.max(single ? -1 : 0, Math.min(N - 1, p)); if (single) return p; var s = spreadOf(p); return s === 0 ? 0 : 2 * s - 1; }
   function nextPage() { if (single) return curPage + 1; var s = spreadOf(curPage) + 1; return 2 * s - 1; }
   function prevPage() { if (single) return curPage - 1; var s = spreadOf(curPage) - 1; return s <= 0 ? 0 : 2 * s - 1; }
 
@@ -244,9 +250,9 @@
   }
   function updateUI() {
     var lastP = N - 1; updateProg();
-    if (single) posEl.textContent = (curPage + 1) + ' / ' + N;
+    if (single) posEl.textContent = (curPage + 2) + ' / ' + (N + 1);
     else { var s = spreadOf(curPage); posEl.textContent = s === 0 ? 'Halaman 1' : 'Halaman ' + (2 * s) + '–' + (2 * s + 1); }
-    btnPrev.disabled = curPage === 0;
+    btnPrev.disabled = curPage <= (single ? -1 : 0);
     btnNext.disabled = single ? curPage >= lastP : spreadOf(curPage) >= spreadOf(lastP);
   }
   function updateCoverBack() { $('#owner').textContent = S.name || ''; }
@@ -304,7 +310,7 @@
 
   async function openBook(target) {
     if (isOpen || busy) return;
-    busy = true; toc.hidden = true;
+    busy = true; toc.hidden = true; lockPortrait();
     book.classList.remove('closed'); cover.classList.add('open'); cta.hidden = true;
     await wait(COVER);
     cover.style.zIndex = 1; cover.setAttribute('aria-label', 'Sampul jurnal (terbuka)');
@@ -314,7 +320,7 @@
   async function closeBook() {
     if (!isOpen || busy) return;
     busy = true; toc.hidden = true;
-    curPage = 0; render();
+    curPage = single ? -1 : 0; render();
     cover.style.zIndex = 6; book.classList.add('closed'); cover.classList.remove('open'); nav.hidden = true;
     await wait(COVER);
     cover.setAttribute('aria-label', 'Buka jurnal');
@@ -328,6 +334,7 @@
   /* ---------- Daftar isi ---------- */
   function buildToc() {
     var items = [['Sebelum mulai', 0], ['Catatan & niat', 1]];
+    if (single) items.unshift(['Jurnal ini milik', -1]);
     for (var n = 1; n <= 7; n++) items.push(['Hari ' + n + ' · ' + DAYS[n - 1].tema, 2 * n + 1, dayWritten(n)]);
     items.push(['Refleksi akhir', 17], ['Terima kasih', 19], ['Simpan & lanjutkan', 20]);
     toc.innerHTML = items.map(function (it) {
@@ -438,11 +445,58 @@
     if (Math.abs(dx) > 70 && Math.abs(dy) < 45) { if (dx < 0) goTo(nextPage()); else goTo(prevPage()); }
   }, { passive: true });
 
-  var rz;
+  /* Saat keyboard HP muncul, ukuran layar berubah. Halaman tidak boleh digambar ulang
+     selagi kolom tulis aktif, kalau tidak keyboard langsung menutup lagi. */
+  var rz, lastW = window.innerWidth, pendingResize = false;
+  function typingNow() {
+    var a = document.activeElement, t = a && a.tagName;
+    return t === 'TEXTAREA' || (t === 'INPUT' && a.type !== 'checkbox');
+  }
+  function refit() {
+    var sec = slotR.querySelector('.page'); if (!sec) return;
+    var fu = fitU(curPage);
+    if (fu) sec.style.setProperty('--u', fu); else sec.style.removeProperty('--u');
+  }
+  function applyResize() {
+    var W = window.innerWidth, was = single;
+    layout();
+    curPage = isOpen ? norm(curPage) : (single ? -1 : 0);
+    if (busy) return;
+    if (W !== lastW || single !== was) { lastW = W; render(); } else refit();
+  }
   window.addEventListener('resize', function () {
     clearTimeout(rz);
-    rz = setTimeout(function () { var was = single; layout(); curPage = norm(curPage); if (!busy) render(); }, 120);
+    rz = setTimeout(function () {
+      if (typingNow()) { pendingResize = true; return; }
+      applyResize(); checkOrient();
+    }, 120);
   });
+  document.addEventListener('focusout', function () {
+    setTimeout(function () {
+      if (pendingResize && !typingNow()) { pendingResize = false; applyResize(); }
+      checkOrient();
+    }, 250);
+  });
+  document.addEventListener('focusin', function (e) {
+    var t = e.target;
+    if (t && (t.tagName === 'TEXTAREA' || (t.tagName === 'INPUT' && t.type !== 'checkbox')) && t.scrollIntoView) {
+      setTimeout(function () { try { t.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (x) {} }, 350);
+    }
+  });
+
+  /* HP: hanya potret. Tablet: potret dan lanskap. */
+  var PHONE = Math.min(screen.width || 9999, screen.height || 9999) < 600;
+  function isLand() {
+    var o = screen.orientation;
+    if (o && o.type) return o.type.indexOf('landscape') === 0;
+    return !!(window.matchMedia && matchMedia('(orientation: landscape)').matches);
+  }
+  function checkOrient() { document.documentElement.classList.toggle('rot', PHONE && isLand() && !typingNow()); }
+  function lockPortrait() {
+    try { if (PHONE && screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(function () {}); } catch (e) {}
+  }
+  window.addEventListener('orientationchange', function () { setTimeout(checkOrient, 200); });
+  if (screen.orientation && screen.orientation.addEventListener) screen.orientation.addEventListener('change', function () { setTimeout(checkOrient, 100); });
 
   /* ==========================================================
      8. MULAI
@@ -622,7 +676,8 @@
   window.addEventListener('appinstalled', function () { deferredPrompt = null; toast('Aplikasi terpasang'); });
   if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
 
-  layout(); render(); updateCoverBack(); refreshResume();
+  layout(); curPage = single ? -1 : 0; render(); updateCoverBack(); refreshResume();
+  checkOrient(); lockPortrait();
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () {
     var a = document.activeElement, tg = a && a.tagName;
     if (busy || dp || tg === 'TEXTAREA' || tg === 'INPUT') return;
