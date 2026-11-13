@@ -218,12 +218,13 @@
   var leaf = $('#leaf'), leafF = $('#leafF'), leafB = $('#leafB');
   var cta = $('#cta'), nav = $('#nav'), posEl = $('#pos'), toc = $('#toc');
   var btnPrev = $('#btnPrev'), btnNext = $('#btnNext');
+  var PHONE = Math.min(screen.width || 9999, screen.height || 9999) < 600;
   var single = false, isOpen = false, busy = false, curPage = 0;
 
   function layout() {
     var vv = window.visualViewport, de = document.documentElement;
     var W = Math.min(window.innerWidth, de.clientWidth || window.innerWidth), H = window.innerHeight;
-    single = W < 820;
+    single = W < 820 || PHONE;
     var availH = H - 170, pw, ph;
     if (single) { pw = Math.min(W - 24, 470); ph = Math.min(availH, 780); }
     else { ph = Math.min(availH, 780); pw = Math.min(Math.floor(ph * 0.74), Math.floor((W - 48) / 2)); }
@@ -256,7 +257,7 @@
     btnPrev.disabled = curPage <= (single ? -1 : 0);
     btnNext.disabled = single ? curPage >= lastP : spreadOf(curPage) >= spreadOf(lastP);
   }
-  function updateCoverBack() { $('#owner').textContent = S.name || ''; }
+  function updateCoverBack() { var o = $('#owner'); if (document.activeElement !== o) o.value = S.name || ''; }
 
   function runLeaf(from, to, fade, mode) {
     return new Promise(function (res) {
@@ -315,14 +316,14 @@
     book.classList.remove('closed'); cover.classList.add('open'); cta.hidden = true;
     await wait(COVER);
     cover.style.zIndex = 1; cover.setAttribute('aria-label', 'Sampul jurnal (terbuka)');
-    isOpen = true; nav.hidden = false; busy = false; updateUI();
+    isOpen = true; book.classList.add('opened'); nav.hidden = false; busy = false; updateUI();
     if (target && target > 0) goTo(target);
   }
   async function closeBook() {
     if (!isOpen || busy) return;
     busy = true; toc.hidden = true;
     curPage = single ? -1 : 0; render();
-    cover.style.zIndex = 6; book.classList.add('closed'); cover.classList.remove('open'); nav.hidden = true;
+    book.classList.remove('opened'); cover.style.zIndex = 6; book.classList.add('closed'); cover.classList.remove('open'); nav.hidden = true;
     await wait(COVER);
     cover.setAttribute('aria-label', 'Buka jurnal');
     cta.hidden = false; isOpen = false; busy = false; refreshResume(); updateProg();
@@ -486,7 +487,6 @@
   });
 
   /* HP: hanya potret. Tablet: potret dan lanskap. */
-  var PHONE = Math.min(screen.width || 9999, screen.height || 9999) < 600;
   function isLand() {
     var o = screen.orientation;
     if (o && o.type) return o.type.indexOf('landscape') === 0;
@@ -678,7 +678,8 @@
   layout(); curPage = single ? -1 : 0; render(); updateCoverBack(); refreshResume();
   checkOrient(); lockPortrait();
   window.addEventListener('load', function () { if (!typingNow()) applyResize(); });
-  [150, 500, 1200].forEach(function (t) { setTimeout(function () { if (!busy && !typingNow() && window.innerWidth !== lastW) applyResize(); }, t); });
+  [100, 400, 900, 1800].forEach(function (t) { setTimeout(function () { if (!busy && !typingNow()) applyResize(); }, t); });
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', function () { clearTimeout(rz); rz = setTimeout(function () { if (!busy && !typingNow()) { applyResize(); checkOrient(); } }, 150); });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () {
     var a = document.activeElement, tg = a && a.tagName;
     if (busy || dp || tg === 'TEXTAREA' || tg === 'INPUT') return;

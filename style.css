@@ -315,3 +315,10 @@ html.rot .stage,html.rot .theme-switch,html.rot .toast{visibility:hidden}
 /* font minimal 16px supaya iPhone tidak memperbesar layar saat mengetik */
 .line-input{font-size:max(16px,calc(19px * var(--u)))}
 .dp-in{font-size:max(16px,calc(17px * var(--u)))}
+
+/* Setelah buku terbuka: sampul tidak boleh menghalangi ketukan / keyboard */
+.book.single.opened .cover{visibility:hidden;pointer-events:none}
+.book.single.opened{perspective:none}
+.cover .back .owner{text-align:center;background:transparent;font-size:max(16px,calc(30px * var(--u)));color:var(--ink);border-top:0;border-left:0;border-right:0}
+input,textarea{-webkit-user-select:text;user-select:text;-webkit-appearance:none;appearance:none}
+.book.opened .cover .front{visibility:hidden;pointer-events:none}

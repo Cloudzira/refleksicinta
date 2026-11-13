@@ -21,7 +21,7 @@
 try{var t=JSON.parse(localStorage.getItem('jurnal-theme'));if(t){g=t.g==='him'?'him':'her';m=t.m==='dark'?'dark':'light';}}catch(e){}
 document.documentElement.setAttribute('data-theme',g+'-'+m);})();
 </script>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=4">
 <body>
 
 <!-- Goresan kuas (dipakai di sampul dan halaman) -->
@@ -78,7 +78,7 @@ document.documentElement.setAttribute('data-theme',g+'-'+m);})();
       </div>
       <div class="face back" id="coverBack">
         <div class="eyebrow">Jurnal ini milik</div>
-        <div class="owner" id="owner"></div>
+        <input class="line-input owner" id="owner" type="text" maxlength="60" autocomplete="name" data-k="name" placeholder="Tulis namamu…" aria-label="Jurnal ini milik">
         <div class="divider"></div>
       </div>
     </div>
@@ -116,7 +116,7 @@ document.documentElement.setAttribute('data-theme',g+'-'+m);})();
 <input type="file" id="fileIn" accept="application/json,.json" hidden>
 <div id="printRoot" aria-hidden="true"></div>
 
-<script src="content.js"></script>
-<script src="app.js"></script>
+<script src="content.js?v=4"></script>
+<script src="app.js?v=4"></script>
 </body>
 </html>
