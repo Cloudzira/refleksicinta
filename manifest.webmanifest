@@ -1,0 +1,16 @@
+{
+  "name": "Jurnal Refleksi Cinta",
+  "short_name": "Jurnal Cinta",
+  "description": "Jurnal refleksi 7 hari untuk merapikan hati.",
+  "lang": "id",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#efe0d8",
+  "theme_color": "#efe0d8",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
