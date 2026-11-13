@@ -192,11 +192,15 @@ a.link{color:var(--rose);font-weight:500;text-decoration:none}
 #printRoot{display:none}
 @media print{
   @page{size:A4;margin:0}
-  html,body{height:auto;overflow:visible;background:#fff;opacity:1}
+  html,body{height:auto;overflow:visible;background:var(--paper);opacity:1}
   .stage{display:none!important}
   #printRoot{display:block}
-  .pp{width:210mm;height:297mm;overflow:hidden;position:relative;break-after:page;page-break-after:always}
-  .pp .page{width:467px;height:660px;transform:scale(1.7);transform-origin:top left;background:#fff!important;box-shadow:none!important;border-radius:0;--u:1.1}
+  .pp{width:210mm;height:297mm;overflow:hidden;position:relative;break-after:page;page-break-after:always;background:var(--paper)}
+  .pp:last-child{break-after:auto;page-break-after:auto}
+  .pp .page{width:467px;height:660px;transform:scale(1.7);transform-origin:top left;background:var(--paper)!important;box-shadow:none!important;border-radius:0;--u:1.1}
+  .pp .cover.pcv{position:relative;left:0;top:0;width:467px;height:660px;transform:scale(1.7);transform-origin:top left;perspective:none;--u:1.1;cursor:default}
+  .pp .cover.pcv .front{visibility:visible;border-radius:0;box-shadow:none;inset:0}
+  .pp .cover.pcv .front::before{display:block}
   .pp .no-print{display:none!important}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }

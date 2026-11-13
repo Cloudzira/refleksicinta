@@ -113,9 +113,11 @@
     if (i === -1) {
       h += '<div style="margin:auto 0;display:flex;flex-direction:column;gap:16px;align-items:center;text-align:center">' +
         '<div class="eyebrow">Jurnal ini milik</div>' +
-        '<input class="line-input owner-in" type="text" maxlength="60" autocomplete="name" data-k="name" value="' + esc(S.name || '') + '" placeholder="Tulis namamu…" aria-label="Jurnal ini milik">' +
+        (mode === 'print'
+          ? '<div class="line-input owner-in">' + (esc(S.name || '') || '&nbsp;') + '</div>'
+          : '<input class="line-input owner-in" type="text" maxlength="60" autocomplete="name" data-k="name" value="' + esc(S.name || '') + '" placeholder="Tulis namamu…" aria-label="Jurnal ini milik">') +
         '<div class="divider"></div>' +
-        '<p class="small">Geser ke kiri atau ketuk › untuk mulai. Namamu juga tampil di halaman “Catatan penting”.</p></div>';
+        (mode === 'print' ? '' : '<p class="small">Geser ke kiri atau ketuk › untuk mulai. Namamu juga tampil di halaman “Catatan penting”.</p>') + '</div>';
     } else if (i === 0) {
       h += '<div class="eyebrow">Sebelum mulai</div><h2 class="h1">Cara memakainya</h2><div class="divider"></div>';
       h += '<ol class="steps">' +
@@ -369,11 +371,16 @@
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
   }
-  function printAll() {
+  function buildPrint() {
     var root = $('#printRoot'), h = '';
-    for (var i = 0; i < N; i++) h += '<section class="pp">' + wrap(i, 'r', 'print') + '</section>';
+    var cf = $('#cover .front');
+    h += '<section class="pp"><div class="cover pcv"><div class="face front">' + (cf ? cf.innerHTML : '') + '</div></div></section>';
+    for (var i = -1; i < N; i++) h += '<section class="pp">' + wrap(i, 'r', 'print') + '</section>';
     root.innerHTML = h;
-    setTimeout(function () { window.print(); }, 150);
+  }
+  function printAll() {
+    buildPrint();
+    setTimeout(function () { window.print(); }, 250);
   }
   function resetAll() {
     if (!confirm('Hapus semua tulisanmu di jurnal ini? Tindakan ini tidak bisa dibatalkan.')) return;
@@ -421,8 +428,8 @@
     else if (el.dataset.act === 'reset') resetAll();
   });
 
-  cover.addEventListener('click', function () { openBook(0); });
-  cover.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openBook(0); } });
+  cover.addEventListener('click', function (e) { if (e.target && e.target.tagName === 'INPUT') return; openBook(0); });
+  cover.addEventListener('keydown', function (e) { if (e.target && e.target.tagName === 'INPUT') return; if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openBook(0); } });
   $('#btnOpen').addEventListener('click', function () { openBook(0); });
   $('#btnResume').addEventListener('click', function () { openBook(S._pos || 0); });
   $('#btnClose').addEventListener('click', closeBook);
@@ -630,9 +637,9 @@
     if (b.id === 'btnGender') setTheme({ g: TH.g === 'her' ? 'him' : 'her' });
     else if (b.id === 'btnMode') setTheme({ m: TH.m === 'dark' ? 'light' : 'dark' });
   });
-  var prevTheme = null; /* hasil cetak selalu versi terang */
-  window.addEventListener('beforeprint', function () { prevTheme = root.getAttribute('data-theme'); root.setAttribute('data-theme', TH.g + '-light'); });
-  window.addEventListener('afterprint', function () { if (prevTheme) { root.setAttribute('data-theme', prevTheme); prevTheme = null; } });
+  /* Cetak / PDF memakai tema yang sedang dipilih, dari sampul sampai halaman terakhir */
+  window.addEventListener('beforeprint', buildPrint);
+  window.addEventListener('afterprint', function () { $('#printRoot').innerHTML = ''; });
   paintTheme();
 
   /* ==========================================================
