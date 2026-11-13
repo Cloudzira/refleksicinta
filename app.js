@@ -40,6 +40,28 @@
     });
   }
   function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+
+  /* ---------- Tanggal: disimpan sebagai YYYY-MM-DD, ditampilkan tgl/bln/thn ---------- */
+  var MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+  var MON3 = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+  var WDAYS = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+  var CAL = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>';
+  function fmtDate(iso) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+    return m ? m[3] + '/' + m[2] + '/' + m[1] : '';
+  }
+  function parseDMY(t) {
+    var m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(t || '');
+    if (!m) return '';
+    var d = +m[1], mo = +m[2], y = +m[3];
+    if (y < 1900 || y > 2100 || mo < 1 || mo > 12 || d < 1) return '';
+    var dt = new Date(y, mo - 1, d);
+    if (dt.getFullYear() !== y || dt.getMonth() !== mo - 1 || dt.getDate() !== d) return '';
+    return y + '-' + pad(mo) + '-' + pad(d);
+  }
+  function isoOf(y, m, d) { return y + '-' + pad(m + 1) + '-' + pad(d); }
+  function todayIso() { var t = new Date(); return isoOf(t.getFullYear(), t.getMonth(), t.getDate()); }
   var REDUCED = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   var FLIP = REDUCED ? 10 : 900, COVER = REDUCED ? 10 : 1150;
 
@@ -52,14 +74,18 @@
     return '<textarea class="lined' + (short ? ' short' : '') + '" data-k="' + key + '" aria-label="' + esc(ph) +
            '" placeholder="' + esc(ph) + '" spellcheck="false">' + esc(v) + '</textarea>';
   }
+  function dateField(label, key, mode) {
+    var shown = fmtDate(S[key]);
+    var inner = mode === 'print'
+      ? '<div class="line-input">' + (esc(shown) || '&nbsp;') + '</div>'
+      : '<div class="dp-wrap"><input class="line-input dp-in" type="text" inputmode="numeric" autocomplete="off" maxlength="10" placeholder="tgl/bln/thn" data-dk="' + key +
+        '" value="' + esc(shown) + '" aria-label="' + esc(label) + ' (tgl/bln/thn)">' +
+        '<button type="button" class="dp-ico" data-dp="' + key + '" aria-label="Pilih tanggal ' + esc(label) + '">' + CAL + '</button></div>';
+    return '<div class="field"><label>' + label + '</label>' + inner + '</div>';
+  }
   function field(label, key, type, mode) {
+    if (type === 'date') return dateField(label, key, mode);
     var v = S[key] || '';
-    if (type === 'date') {
-      var fv = fmtDate(v);
-      return '<div class="field"><label>' + label + '</label>' + (mode === 'print'
-        ? '<div class="line-input">' + (esc(fv) || '&nbsp;') + '</div>'
-        : '<button type="button" class="line-input date-btn' + (fv ? '' : ' empty') + '" data-date="' + key + '" aria-haspopup="dialog" aria-label="' + esc(label) + '"><span>' + (esc(fv) || 'tgl/bln/thn') + '</span>' + CAL_ICON + '</button>') + '</div>';
-    }
     var inner = mode === 'print'
       ? '<div class="line-input">' + (esc(v) || '&nbsp;') + '</div>'
       : '<input class="line-input" type="' + type + '" data-k="' + key + '" value="' + esc(v) + '" aria-label="' + esc(label) + '">';
@@ -133,26 +159,49 @@
         '<p class="q" style="color:var(--soft)">Tidak semua yang kamu tulis harus selesai. Cukup bahwa kamu berani menuliskannya. Hati yang mau berhenti sejenak untuk jujur, sudah sedang pulang.</p>' +
         '<p class="small">Kamu sudah menulis di ' + daysDone() + ' dari 7 hari.</p></div>';
     } else {
-      h += '<div class="eyebrow">Simpan &amp; lanjutkan</div><h2 class="h1 sm">Tulisanmu milikmu</h2><div class="divider"></div>';
-      h += '<p class="p tight">Tulisanmu tersimpan otomatis di browser ini. Simpan cadangan agar aman dan bisa dipulihkan kapan saja.</p>';
+      h += '<div class="eyebrow">Simpan &amp; lanjutkan</div><h2 class="h1">Tulisanmu milikmu</h2><div class="divider"></div>';
+      h += '<p class="p sm">Tersimpan otomatis di browser ini. Simpan cadangan .json agar bisa dipulihkan kapan saja, termasuk di perangkat lain.</p>';
       h += '<div class="actions no-print">' +
         '<button class="btn primary" type="button" data-act="export-json">Simpan cadangan (.json)</button>' +
+        '<div class="agrid">' +
         '<button class="btn" type="button" data-act="import">Pulihkan cadangan</button>' +
         '<button class="btn" type="button" data-act="export">Unduh teks (.txt)</button>' +
-        '<button class="btn' + (deferredPrompt ? '' : ' span2') + '" type="button" data-act="print">Cetak / simpan PDF</button>' +
-        '<button class="btn" type="button" data-act="install"' + (deferredPrompt ? '' : ' hidden') + '>Pasang di perangkat</button>' +
-        '<button class="btn danger span2" type="button" data-act="reset">Hapus semua tulisan</button></div>';
-      if (IOS && !STANDALONE) h += '<p class="small no-print" style="text-align:center">Di iPhone/iPad: ketuk Bagikan, lalu “Tambah ke Layar Utama”.</p>';
-      h += '<p class="small" style="text-align:center">Ingin ditemani bertumbuh? Temukan apps islami di <a class="link" href="https://kurniapedia.my.id/" target="_blank" rel="noopener">kurniapedia.my.id</a><br>Refleksi harian lainnya di Threads: kurniapedia</p>';
+        '<button class="btn" type="button" data-act="print">Cetak / simpan PDF</button>' +
+        '<button class="btn" type="button" data-act="install"' + (deferredPrompt ? '' : ' hidden') + '>Pasang di perangkat</button></div>' +
+        '<button class="btn danger" type="button" data-act="reset">Hapus semua tulisan</button></div>';
+      if (IOS && !STANDALONE) h += '<p class="small no-print" style="text-align:center">Di iPhone atau iPad: ketuk Bagikan, lalu “Tambah ke Layar Utama”.</p>';
+      h += '<div class="outro"><p>Ingin ditemani bertumbuh? Temukan apps islami di <a class="link" href="https://kurniapedia.my.id/" target="_blank" rel="noopener">kurniapedia.my.id</a></p>' +
+        '<p>Refleksi harian lainnya ada di Threads: kurniapedia</p></div>';
       h += '<div class="crafted">Crafted with ' + HEART + ' by <a href="https://kurniapedia.my.id/" target="_blank" rel="noopener">Kurniapedia</a> 2026</div>';
     }
     return h;
   }
+  /* Halaman yang isinya harus muat tanpa scroll: ukuran diperkecil otomatis kalau layar pendek */
+  var FIT = {}, FITP = { 1: 1, 20: 1 }, TIGHT = { 20: 1 };
+  function fitU(i) {
+    if (!FITP[i]) return null;
+    if (i in FIT) return FIT[i];
+    var u0 = parseFloat(document.documentElement.style.getPropertyValue('--u')) || 1;
+    var box = document.createElement('div');
+    box.className = 'fitprobe';
+    box.innerHTML = wrap(i, 'r', 'probe');
+    document.body.appendChild(box);
+    var page = box.firstChild, pin = page.querySelector('.pin'), u = u0;
+    page.style.setProperty('--u', u);
+    while (pin.scrollHeight > pin.clientHeight + 1 && u > 0.5) {
+      u = Math.round((u - 0.03) * 1000) / 1000;
+      page.style.setProperty('--u', u);
+    }
+    box.remove();
+    FIT[i] = u < u0 - 0.0005 ? u : null;
+    return FIT[i];
+  }
   function wrap(i, side, mode) {
     var cls = 'page ' + (side === 'l' ? 'l' : 'r') + (mode === 'print' ? ' print' : '');
-    return '<section class="' + cls + '" data-p="' + i + '">' +
+    var fu = (mode === 'print' || mode === 'probe') ? null : fitU(i);
+    return '<section class="' + cls + '" data-p="' + i + '"' + (fu ? ' style="--u:' + fu + '"' : '') + '>' +
       '<svg class="brush ' + (side === 'l' ? 'bl' : 'tr') + '" aria-hidden="true"><use href="#brushTR"/></svg>' +
-      '<div class="pin">' + body(i, mode) + '</div>' +
+      '<div class="pin' + (TIGHT[i] ? ' tight' : '') + '">' + body(i, mode) + '</div>' +
       '<div class="pfoot">kurniapedia · ' + (i + 1) + '</div></section>';
   }
 
@@ -171,11 +220,12 @@
     var availH = H - 170, pw, ph;
     if (single) { pw = Math.min(W - 24, 470); ph = Math.min(availH, 780); }
     else { ph = Math.min(availH, 780); pw = Math.min(Math.floor(ph * 0.74), Math.floor((W - 48) / 2)); }
-    var u = Math.max(0.66, Math.min(1.2, Math.min(pw / 380, ph / 520)));
+    var u = Math.max(0.78, Math.min(1.2, pw / 380));
     var r = document.documentElement.style;
     r.setProperty('--pw', pw + 'px'); r.setProperty('--ph', ph + 'px');
     r.setProperty('--cols', single ? 1 : 2); r.setProperty('--u', u.toFixed(3));
     book.classList.toggle('single', single);
+    FIT = {};
   }
   function spreadOf(p) { return p === 0 ? 0 : Math.ceil(p / 2); }
   function norm(p) { p = Math.max(0, Math.min(N - 1, p)); if (single) return p; var s = spreadOf(p); return s === 0 ? 0 : 2 * s - 1; }
@@ -190,7 +240,7 @@
       slotL.classList.toggle('empty', s === 0);
       slotR.innerHTML = wrap(2 * s, 'r');
     }
-    updateUI(); fitPages();
+    updateUI();
   }
   function updateUI() {
     var lastP = N - 1; updateProg();
@@ -207,7 +257,7 @@
       leaf.style.transition = 'none';
       leaf.style.opacity = (fade && mode === 'in') ? 0 : 1;
       leaf.style.transform = 'rotateY(' + from + 'deg)';
-      leaf.style.display = 'block'; fitPages();
+      leaf.style.display = 'block';
       void leaf.offsetWidth;
       var tr = 'transform ' + d + 'ms cubic-bezier(.45,.05,.2,1)';
       if (fade) {
@@ -240,13 +290,13 @@
         slotR.innerHTML = wrap(2 * sn, 'r');
       }
     }
-    leaf.style.display = 'none'; fitPages();
+    leaf.style.display = 'none';
   }
   async function goTo(p) {
     if (busy || !isOpen) return;
     var np = norm(p);
     if (np === curPage) return;
-    busy = true; toc.hidden = true; closeCal();
+    busy = true; toc.hidden = true;
     await doFlip(np > curPage ? 1 : -1, np);
     curPage = np; S._pos = curPage; saveNow(); updateUI();
     busy = false;
@@ -326,9 +376,16 @@
      ========================================================== */
   document.addEventListener('input', function (e) {
     var t = e.target;
+    if (t && t.dataset && t.dataset.dk) { onDateInput(t); return; }
     if (t && t.dataset && t.dataset.k && (t.tagName === 'TEXTAREA' || t.tagName === 'INPUT') && t.type !== 'checkbox') {
       S[t.dataset.k] = t.value; save();
       if (t.dataset.k === 'name') updateCoverBack();
+    }
+  });
+  document.addEventListener('focusout', function (e) {
+    var t = e.target;
+    if (t && t.dataset && t.dataset.dk && t.value && !parseDMY(t.value)) {
+      t.classList.add('bad'); toast('Isi dengan format tgl/bln/thn, contoh 13/11/2026');
     }
   });
   document.addEventListener('change', function (e) {
@@ -336,13 +393,15 @@
     if (t && t.type === 'checkbox' && t.dataset.k) { S[t.dataset.k] = t.checked; save(); }
   });
   document.addEventListener('click', function (e) {
-    var el = e.target.closest ? e.target.closest('[data-mood],[data-goto],[data-act]') : null;
+    var el = e.target.closest ? e.target.closest('[data-mood],[data-goto],[data-act],[data-dp]') : null;
     if (!el) { if (!e.target.closest || !e.target.closest('.toc,#btnToc')) toc.hidden = true; return; }
     if (el.dataset.mood) {
       var k = el.dataset.k, n = +el.dataset.mood;
       S[k] = (+S[k] === n) ? 0 : n; save();
       var group = el.parentNode.querySelectorAll('button');
       for (var i = 0; i < group.length; i++) group[i].classList.toggle('on', +group[i].dataset.mood === +S[k]);
+    } else if (el.dataset.dp) {
+      openDP(el.dataset.dp, el);
     } else if (el.dataset.goto) {
       goTo(+el.dataset.goto);
     } else if (el.dataset.act === 'export') exportText();
@@ -363,17 +422,18 @@
   $('#btnToc').addEventListener('click', function (e) { e.stopPropagation(); buildToc(); toc.hidden = !toc.hidden; });
 
   document.addEventListener('keydown', function (e) {
+    if (dp) { if (e.key === 'Escape') closeDP(); return; }
     var tag = (document.activeElement && document.activeElement.tagName) || '';
-    if (tag === 'TEXTAREA' || tag === 'INPUT' || cal) return;
+    if (tag === 'TEXTAREA' || tag === 'INPUT') return;
     if (e.key === 'ArrowRight') goTo(nextPage());
     else if (e.key === 'ArrowLeft') goTo(prevPage());
   });
   var tx = 0, ty = 0, tTarget = null;
   document.addEventListener('touchstart', function (e) { tx = e.touches[0].clientX; ty = e.touches[0].clientY; tTarget = e.target; }, { passive: true });
   document.addEventListener('touchend', function (e) {
-    if (!isOpen || !tTarget) return;
+    if (!isOpen || !tTarget || dp) return;
     var tag = tTarget.tagName;
-    if (tag === 'TEXTAREA' || tag === 'INPUT' || (tTarget.closest && tTarget.closest('.cal'))) return;
+    if (tag === 'TEXTAREA' || tag === 'INPUT') return;
     var dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
     if (Math.abs(dx) > 70 && Math.abs(dy) < 45) { if (dx < 0) goTo(nextPage()); else goTo(prevPage()); }
   }, { passive: true });
@@ -387,6 +447,111 @@
   /* ==========================================================
      8. MULAI
      ========================================================== */
+
+  /* ==========================================================
+     7a. KALENDER BERTEMA (tgl/bln/thn)
+     ========================================================== */
+  var dpm = null, dp = null, dpOpener = null;
+  function onDateInput(el) {
+    var raw = el.value, pos = el.selectionStart == null ? raw.length : el.selectionStart;
+    var before = raw.slice(0, pos).replace(/\D/g, '').length;
+    var d = raw.replace(/\D/g, '').slice(0, 8);
+    var out = d.slice(0, 2) + (d.length > 2 ? '/' + d.slice(2, 4) : '') + (d.length > 4 ? '/' + d.slice(4) : '');
+    el.value = out;
+    if (pos < raw.length) { /* sunting di tengah: kembalikan posisi kursor */
+      var np = 0, c = 0;
+      while (np < out.length && c < before) { if (/\d/.test(out.charAt(np))) c++; np++; }
+      try { el.setSelectionRange(np, np); } catch (x) {}
+    }
+    el.classList.remove('bad');
+    S[el.dataset.dk] = parseDMY(out); save();
+  }
+  function buildDP() {
+    if (dpm) return;
+    dpm = document.createElement('div');
+    dpm.className = 'dpm'; dpm.hidden = true;
+    dpm.setAttribute('role', 'dialog'); dpm.setAttribute('aria-modal', 'true'); dpm.setAttribute('aria-label', 'Pilih tanggal');
+    dpm.innerHTML = '<div class="dpc"><svg class="brush tr" aria-hidden="true"><use href="#brushTR"/></svg>' +
+      '<div class="dp-head"><button type="button" class="dp-nav" data-dpn="-1" aria-label="Sebelumnya">‹</button>' +
+      '<button type="button" class="dp-title" data-dpt aria-label="Ganti bulan atau tahun"></button>' +
+      '<button type="button" class="dp-nav" data-dpn="1" aria-label="Berikutnya">›</button></div>' +
+      '<div class="dp-body"></div>' +
+      '<div class="dp-foot"><button type="button" data-dpa="today">Hari ini</button><button type="button" data-dpa="clear">Hapus</button><button type="button" data-dpa="close">Tutup</button></div></div>';
+    document.body.appendChild(dpm);
+    dpm.addEventListener('click', function (e) {
+      if (e.target === dpm) return closeDP();
+      var b = e.target.closest ? e.target.closest('button') : null; if (!b || !dp) return;
+      var ds = b.dataset;
+      if (ds.dpd != null) pickDate(ds.dpd);
+      else if (ds.dpmo != null) { dp.m = +ds.dpmo; dp.view = 'day'; paintDP(); }
+      else if (ds.dpy != null) { dp.y = +ds.dpy; dp.view = 'month'; paintDP(); }
+      else if (ds.dpn != null) {
+        var n = +ds.dpn;
+        if (dp.view === 'day') { dp.m += n; if (dp.m < 0) { dp.m = 11; dp.y--; } else if (dp.m > 11) { dp.m = 0; dp.y++; } }
+        else if (dp.view === 'month') dp.y += n;
+        else dp.yb += 12 * n;
+        paintDP();
+      }
+      else if (ds.dpt != null) {
+        if (dp.view === 'day') dp.view = 'month';
+        else if (dp.view === 'month') { dp.view = 'year'; dp.yb = dp.y - 4; }
+        else dp.view = 'day';
+        paintDP();
+      }
+      else if (ds.dpa === 'today') pickDate(todayIso());
+      else if (ds.dpa === 'clear') pickDate('');
+      else if (ds.dpa === 'close') closeDP();
+    });
+  }
+  function paintDP() {
+    var head = dpm.querySelector('[data-dpt]'), bodyEl = dpm.querySelector('.dp-body');
+    var sel = S[dp.key] || '', today = todayIso(), h = '', i;
+    if (dp.view === 'day') {
+      head.textContent = MONTHS[dp.m] + ' ' + dp.y;
+      h += '<div class="dp-wd">' + WDAYS.map(function (w) { return '<span>' + w + '</span>'; }).join('') + '</div><div class="dp-grid">';
+      var off = (new Date(dp.y, dp.m, 1).getDay() + 6) % 7, n = new Date(dp.y, dp.m + 1, 0).getDate();
+      for (i = 0; i < off; i++) h += '<span></span>';
+      for (i = 1; i <= n; i++) {
+        var iso = isoOf(dp.y, dp.m, i);
+        h += '<button type="button" class="dp-d' + (iso === sel ? ' sel' : '') + (iso === today ? ' today' : '') + '" data-dpd="' + iso +
+             '" aria-label="' + i + ' ' + MONTHS[dp.m] + ' ' + dp.y + '"' + (iso === sel ? ' aria-pressed="true"' : '') + '>' + i + '</button>';
+      }
+      h += '</div>';
+    } else if (dp.view === 'month') {
+      head.textContent = dp.y;
+      var sm = sel ? sel.split('-') : [];
+      h += '<div class="dp-grid3">';
+      for (i = 0; i < 12; i++) h += '<button type="button" class="dp-c' + (+sm[0] === dp.y && +sm[1] === i + 1 ? ' sel' : '') + '" data-dpmo="' + i + '">' + MON3[i] + '</button>';
+      h += '</div>';
+    } else {
+      head.textContent = dp.yb + ' – ' + (dp.yb + 11);
+      var sy = sel ? +sel.split('-')[0] : 0, ty = new Date().getFullYear();
+      h += '<div class="dp-grid3">';
+      for (i = dp.yb; i < dp.yb + 12; i++) h += '<button type="button" class="dp-c' + (i === sy ? ' sel' : '') + (i === ty ? ' today' : '') + '" data-dpy="' + i + '">' + i + '</button>';
+      h += '</div>';
+    }
+    bodyEl.innerHTML = h;
+  }
+  function openDP(key, opener) {
+    buildDP();
+    var base = S[key] || (key === 'end' && S.start) || todayIso(), p = base.split('-');
+    dp = { key: key, y: +p[0], m: +p[1] - 1, view: 'day', yb: 0 }; dpOpener = opener || null;
+    paintDP(); dpm.hidden = false;
+    var f = dpm.querySelector('.dp-d.sel') || dpm.querySelector('.dp-d.today') || dpm.querySelector('.dp-d');
+    if (f) f.focus();
+  }
+  function closeDP() {
+    if (!dpm) return;
+    dpm.hidden = true; dp = null;
+    if (dpOpener && document.body.contains(dpOpener)) dpOpener.focus();
+    dpOpener = null;
+  }
+  function pickDate(iso) {
+    var key = dp.key; S[key] = iso;
+    Array.prototype.forEach.call(document.querySelectorAll('[data-dk="' + key + '"]'), function (el) { el.value = fmtDate(iso); el.classList.remove('bad'); });
+    save(); closeDP();
+  }
+
   /* ==========================================================
      7b. TEMA (perempuan / laki-laki x terang / gelap)
      ========================================================== */
@@ -443,7 +608,7 @@
         var o = JSON.parse(r.result);
         if (!o || o.app !== 'jurnal-refleksi-cinta' || typeof o.data !== 'object') throw 0;
         var d = {};
-        for (var k in o.data) if (OKKEY.test(k)) { var v = o.data[k]; if (typeof v === 'string') d[k] = v.slice(0, 20000); else if (typeof v === 'number' || typeof v === 'boolean') d[k] = v; }
+        for (var k in o.data) if (OKKEY.test(k)) { var v = o.data[k]; if ((k === 'start' || k === 'end') && !(typeof v === 'string' && (v === '' || fmtDate(v)))) continue; if (typeof v === 'string') d[k] = v.slice(0, 20000); else if (typeof v === 'number' || typeof v === 'boolean') d[k] = v; }
         if (!confirm('Pulihkan cadangan ini? Tulisan yang ada sekarang akan diganti.')) return;
         S = d; saveNow(); updateCoverBack(); render(); refreshResume(); toast('Cadangan dipulihkan');
       } catch (x) { toast('Berkas cadangan tidak dikenali'); }
@@ -453,88 +618,15 @@
   window.addEventListener('beforeinstallprompt', function (e) {
     e.preventDefault(); deferredPrompt = e;
     Array.prototype.forEach.call(document.querySelectorAll('[data-act="install"]'), function (b) { b.hidden = false; });
-    Array.prototype.forEach.call(document.querySelectorAll('[data-act="print"]'), function (b) { b.classList.remove('span2'); });
   });
   window.addEventListener('appinstalled', function () { deferredPrompt = null; toast('Aplikasi terpasang'); });
   if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
 
-  /* ==========================================================
-     7d. KALENDER (tgl/bln/thn) & PAS-KAN HALAMAN KE TINGGI LAYAR
-     ========================================================== */
-  var MONTHS = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-  var DOW = ['Sen','Sel','Rab','Kam','Jum','Sab','Min'];
-  var CAL_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg>';
-  var ISO = /^(\d{4})-(\d{2})-(\d{2})$/;
-  function pad(n) { return (n < 10 ? '0' : '') + n; }
-  function fmtDate(v) { var m = ISO.exec(v || ''); return m ? m[3] + '/' + m[2] + '/' + m[1] : ''; }
-  var cal = null, calBtn = null, calKey = '', calY = 0, calM = 0;
-  function closeCal() { if (cal) { cal.remove(); cal = null; calBtn = null; } }
-  function openCal(btn) {
-    closeCal(); calBtn = btn; calKey = btn.dataset.date;
-    var m = ISO.exec(S[calKey] || ''), now = new Date();
-    calY = m ? +m[1] : now.getFullYear(); calM = m ? +m[2] - 1 : now.getMonth();
-    cal = document.createElement('div'); cal.className = 'cal';
-    cal.setAttribute('role', 'dialog'); cal.setAttribute('aria-label', 'Pilih tanggal');
-    document.body.appendChild(cal); drawCal(); placeCal();
-  }
-  function drawCal() {
-    var sel = S[calKey] || '', t = new Date(), today = t.getFullYear() + '-' + pad(t.getMonth() + 1) + '-' + pad(t.getDate());
-    var first = (new Date(calY, calM, 1).getDay() + 6) % 7, days = new Date(calY, calM + 1, 0).getDate(), h = '';
-    h += '<div class="cal-head"><button type="button" data-cal="py" aria-label="Tahun sebelumnya">«</button><button type="button" data-cal="pm" aria-label="Bulan sebelumnya">‹</button>' +
-         '<div class="cal-title">' + MONTHS[calM] + ' ' + calY + '</div>' +
-         '<button type="button" data-cal="nm" aria-label="Bulan berikutnya">›</button><button type="button" data-cal="ny" aria-label="Tahun berikutnya">»</button></div><div class="cal-grid">';
-    DOW.forEach(function (d) { h += '<span class="cal-dow">' + d + '</span>'; });
-    for (var i = 0; i < first; i++) h += '<span></span>';
-    for (var d = 1; d <= days; d++) {
-      var iso = calY + '-' + pad(calM + 1) + '-' + pad(d);
-      h += '<button type="button" class="cal-day' + (iso === sel ? ' sel' : '') + (iso === today ? ' today' : '') + '" data-day="' + iso + '">' + d + '</button>';
-    }
-    cal.innerHTML = h + '</div><div class="cal-foot"><button type="button" data-cal="today">Hari ini</button><button type="button" data-cal="clear">Hapus</button></div>';
-  }
-  function placeCal() {
-    var r = calBtn.getBoundingClientRect(), w = Math.min(290, window.innerWidth - 24);
-    cal.style.width = w + 'px'; cal.style.left = Math.max(12, Math.min(r.left, window.innerWidth - w - 12)) + 'px';
-    var hh = cal.offsetHeight, top = r.bottom + 8;
-    if (top + hh > window.innerHeight - 12) top = Math.max(12, r.top - hh - 8);
-    cal.style.top = top + 'px';
-  }
-  function pickDate(iso) {
-    S[calKey] = iso; save();
-    calBtn.firstChild.textContent = fmtDate(iso) || 'tgl/bln/thn'; calBtn.classList.toggle('empty', !iso);
-    if (calKey === 'name') updateCoverBack();
-    var b = calBtn; closeCal(); b.focus();
-  }
-  document.addEventListener('click', function (e) {
-    var t = e.target; if (!t.closest) return;
-    var db = t.closest('[data-date]');
-    if (db) { if (cal && calBtn === db) closeCal(); else openCal(db); return; }
-    if (!t.closest('.cal')) { closeCal(); return; }
-    var dy = t.closest('[data-day]'), cb = t.closest('[data-cal]');
-    if (dy) { pickDate(dy.dataset.day); return; }
-    if (!cb) return;
-    var a = cb.dataset.cal;
-    if (a === 'pm') { calM--; if (calM < 0) { calM = 11; calY--; } }
-    else if (a === 'nm') { calM++; if (calM > 11) { calM = 0; calY++; } }
-    else if (a === 'py') calY--; else if (a === 'ny') calY++;
-    else if (a === 'today') { var n = new Date(); pickDate(n.getFullYear() + '-' + pad(n.getMonth() + 1) + '-' + pad(n.getDate())); return; }
-    else if (a === 'clear') { pickDate(''); return; }
-    drawCal(); placeCal();
-  });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeCal(); });
-  window.addEventListener('resize', closeCal);
-
-  /* halaman teks (bukan lembar tulis) otomatis dikecilkan bila tinggi layar kurang, supaya tidak perlu digulir */
-  var FIT = { 0: 1, 1: 1, 19: 1, 20: 1 };
-  function fitPages() {
-    Array.prototype.forEach.call(document.querySelectorAll('#book .page[data-p]'), function (pg) {
-      if (!FIT[pg.dataset.p]) return;
-      var pin = pg.querySelector('.pin'); if (!pin || !pin.clientHeight) return;
-      pg.style.removeProperty('--u');
-      var u = parseFloat(getComputedStyle(pg).getPropertyValue('--u')) || 1, n = 0;
-      while (pin.scrollHeight > pin.clientHeight + 1 && u > 0.5 && n++ < 16) { u -= 0.04; pg.style.setProperty('--u', u.toFixed(3)); }
-    });
-  }
-
   layout(); render(); updateCoverBack(); refreshResume();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () {
+    var a = document.activeElement, tg = a && a.tagName;
+    if (busy || dp || tg === 'TEXTAREA' || tg === 'INPUT') return;
+    FIT = {}; render();
+  });
   requestAnimationFrame(function () { document.body.classList.add('loaded'); });
 })();

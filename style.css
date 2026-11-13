@@ -14,7 +14,7 @@
   --pw:360px; --ph:640px; --cols:2; --u:1;   /* diatur otomatis oleh JavaScript */
 }
 /* TEMA: her/him x light/dark. Ubah warna cukup di sini */
-html[data-theme="her-light"]{--ink:#2b2226;--soft:#6a5c60;--rose:#b46a73;--rose-hover:#9f5a63;--paper:#fcf8f1;--line:rgba(180,106,115,.34);--gold:rgba(184,146,86,.55);--bg:#efe0d8;--bgA:#f6e9e2;--bgB:#e8d3cb;--spine:rgba(120,70,70,.15);--edge1:var(--edge1);--edge2:var(--edge2);--sh:90,45,45;--tint:222,164,160;--acc:180,106,115;--on-fill:#fff;--cover1:#fffaf3;--cover2:#f7e9df;--cover3:#f0dccf;--cedge:#e9d9cb;--chi:rgba(255,255,255,.7);--chi2:rgba(255,255,255,.35);--cspine:rgba(130,75,75,.32);--cback:var(--cback);--leafshade:rgba(60,30,30,.14);--glass:rgba(255,255,255,.45);--surface:#fffaf4;--danger:#8a5a5a;--danger-line:#c9a3a0;--b1:#dea4a0;--b2:#c98a92;--b3:#e8bcb7;color-scheme:light}
+html[data-theme="her-light"]{--ink:#2b2226;--soft:#6a5c60;--rose:#b46a73;--rose-hover:#9f5a63;--paper:#fcf8f1;--line:rgba(180,106,115,.34);--gold:rgba(184,146,86,.55);--bg:#efe0d8;--bgA:#f6e9e2;--bgB:#e8d3cb;--spine:rgba(120,70,70,.15);--edge1:#f1e6dd;--edge2:#e7d8ce;--sh:90,45,45;--tint:222,164,160;--acc:180,106,115;--on-fill:#fff;--cover1:#fffaf3;--cover2:#f7e9df;--cover3:#f0dccf;--cedge:#e9d9cb;--chi:rgba(255,255,255,.7);--chi2:rgba(255,255,255,.35);--cspine:rgba(130,75,75,.32);--cback:#f6e9e2;--leafshade:rgba(60,30,30,.14);--glass:rgba(255,255,255,.45);--surface:#fffaf4;--danger:#8a5a5a;--danger-line:#c9a3a0;--b1:#dea4a0;--b2:#c98a92;--b3:#e8bcb7;color-scheme:light}
 html[data-theme="her-dark"]{--ink:#f1e6e4;--soft:#bba9ad;--rose:#e0a0a7;--rose-hover:#ebb2b8;--paper:#2a2124;--line:rgba(224,160,167,.26);--gold:rgba(214,180,128,.4);--bg:#1b1415;--bgA:#3a2a2e;--bgB:#2a1d21;--spine:rgba(0,0,0,.35);--edge1:#231a1d;--edge2:#1c1417;--sh:0,0,0;--tint:224,160,167;--acc:224,160,167;--on-fill:#2a1b1f;--cover1:#3a2c30;--cover2:#2f2428;--cover3:#261c20;--cedge:#1e1619;--chi:rgba(255,255,255,.07);--chi2:rgba(255,255,255,.05);--cspine:rgba(0,0,0,.45);--cback:#2a2124;--leafshade:rgba(0,0,0,.28);--glass:rgba(255,255,255,.06);--surface:#32272b;--danger:#e2a7a7;--danger-line:#7a5459;--b1:#7a4a52;--b2:#c98a92;--b3:#9c6670;color-scheme:dark}
 html[data-theme="him-light"]{--ink:#1f2a2e;--soft:#56666b;--rose:#4d7886;--rose-hover:#3f6573;--paper:#f7f9f6;--line:rgba(77,120,134,.32);--gold:rgba(140,150,120,.55);--bg:#e1eaeb;--bgA:#e9f0f1;--bgB:#d3e0e2;--spine:rgba(40,70,80,.14);--edge1:#e8eeee;--edge2:#d9e3e3;--sh:30,55,65;--tint:169,196,201;--acc:77,120,134;--on-fill:#fff;--cover1:#fbfdfc;--cover2:#e9f1f2;--cover3:#d9e5e7;--cedge:#d5e1e3;--chi:rgba(255,255,255,.7);--chi2:rgba(255,255,255,.35);--cspine:rgba(40,80,92,.3);--cback:#e8f0f1;--leafshade:rgba(20,45,55,.14);--glass:rgba(255,255,255,.5);--surface:#fafcfc;--danger:#7a5a5a;--danger-line:#b9a5a5;--b1:#a9c4c9;--b2:#6f95a3;--b3:#c4d9dc;color-scheme:light}
 html[data-theme="him-dark"]{--ink:#e6eef0;--soft:#a5b4b9;--rose:#8fbac6;--rose-hover:#a6cbd5;--paper:#1f292e;--line:rgba(143,186,198,.26);--gold:rgba(170,190,160,.35);--bg:#11181c;--bgA:#2a3a40;--bgB:#1b272d;--spine:rgba(0,0,0,.35);--edge1:#182026;--edge2:#131a1f;--sh:0,0,0;--tint:143,186,198;--acc:143,186,198;--on-fill:#14232a;--cover1:#2c3b42;--cover2:#243138;--cover3:#1d282e;--cedge:#151d22;--chi:rgba(255,255,255,.07);--chi2:rgba(255,255,255,.05);--cspine:rgba(0,0,0,.45);--cback:#1f292e;--leafshade:rgba(0,0,0,.28);--glass:rgba(255,255,255,.06);--surface:#27343a;--danger:#e0b0b0;--danger-line:#6b5558;--b1:#3f6673;--b2:#7eaab8;--b3:#5a8593;color-scheme:dark}
@@ -247,31 +247,53 @@ html[data-theme^="her"] .orn-him,html[data-theme^="him"] .orn-her{display:none}
 .toast.on{opacity:1;transform:translate(-50%,0)}
 @media print{.toast{display:none!important}.pp .page::after{display:none}}
 
-/* Halaman terakhir: ringkas, muat tanpa scroll */
+/* ============================================================
+   HALAMAN TERAKHIR: ringkas, muat tanpa scroll
+   ============================================================ */
+.pin.tight{gap:calc(9px * var(--u));padding-top:calc(24px * var(--u))}
+.tight .h1{font-size:calc(31px * var(--u))}
+.p.sm{font-size:.76em;line-height:1.55;text-align:center;text-wrap:balance}
+.actions{gap:7px}
+.actions .btn{padding:9px 14px;font-size:.78em;line-height:1.25;white-space:nowrap}
+.actions .btn.primary{padding:10px 14px;font-size:.84em}
+.agrid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.agrid .btn{padding:8px 6px;font-size:.72em;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.agrid:has(> [data-act="install"][hidden]) > [data-act="print"]{grid-column:1 / -1}
+.actions .btn.danger{padding:2px 8px;font-size:.7em;align-self:center}
+.outro{text-align:center;font-size:.72em;line-height:1.55;color:var(--soft);margin-top:auto}
+.outro p{margin:0}
+.tight .crafted{margin-top:0;padding-top:2px;font-size:.7em}
+.fitprobe{position:fixed;left:-9999px;top:0;width:var(--pw);height:var(--ph);visibility:hidden;pointer-events:none}
 
-/* ---------- Halaman terakhir: ringkas ---------- */
-.h1.sm{font-size:calc(30px * var(--u))}
-.p.tight{font-size:.8em;line-height:1.55}
-.actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.actions .primary,.actions .span2{grid-column:1/-1}
-.actions .btn{padding:8px 8px;font-size:.78em;line-height:1.25}
-.actions .btn.primary{padding:10px 12px;font-size:.84em}
-.actions .btn.danger{padding:2px 4px;font-size:.72em}
-/* ---------- Kalender bertema ---------- */
-.date-btn{display:flex;align-items:center;justify-content:space-between;gap:6px;text-align:left;cursor:pointer;font-size:calc(17px * var(--u))}
-.date-btn svg{width:15px;height:15px;flex:none;fill:none;stroke:var(--rose);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
-.date-btn.empty span{color:var(--soft);opacity:.55}
-.cal{position:fixed;z-index:80;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:18px;padding:14px 14px 10px;box-shadow:0 18px 50px -12px rgba(var(--sh),.55);font-family:"Poppins",system-ui,sans-serif;font-weight:300;animation:calIn .18s ease}
-@keyframes calIn{from{opacity:0;transform:translateY(4px)}}
-.cal-head{display:flex;align-items:center;gap:2px;margin-bottom:6px}
-.cal-title{flex:1;text-align:center;font-family:"Chorus",Georgia,serif;font-size:20px;line-height:1.2}
-.cal-head button{width:30px;height:30px;border:0;border-radius:50%;background:transparent;color:var(--rose);font-size:18px;line-height:1;cursor:pointer;padding:0 0 2px}
-.cal-head button:hover,.cal-day:hover,.cal-foot button:hover{background:rgba(var(--tint),.22)}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center}
-.cal-dow{font-size:10px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--rose);padding:6px 0 4px}
-.cal-day{aspect-ratio:1;border:0;border-radius:50%;background:transparent;color:var(--ink);font:300 13px "Poppins",system-ui,sans-serif;cursor:pointer;padding:0}
-.cal-day.today{box-shadow:inset 0 0 0 1px var(--rose)}
-.cal-day.sel{background:var(--rose);color:var(--on-fill);font-weight:400}
-.cal-foot{display:flex;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
-.cal-foot button{border:0;background:transparent;color:var(--rose);font:400 12px "Poppins",system-ui,sans-serif;letter-spacing:.04em;cursor:pointer;padding:6px 10px;border-radius:8px}
-@media print{.cal{display:none!important}}
+/* ============================================================
+   KALENDER BERTEMA (tgl/bln/thn)
+   ============================================================ */
+.dp-wrap{position:relative;display:flex;align-items:center}
+.dp-in{padding-right:30px;font-size:calc(17px * var(--u))}
+.line-input.bad{border-bottom-color:var(--danger)}
+.dp-ico{position:absolute;right:0;bottom:2px;width:28px;height:28px;border:0;background:transparent;color:var(--rose);display:grid;place-items:center;cursor:pointer;border-radius:50%;padding:0}
+.dp-ico:hover{background:rgba(var(--tint),.25)}
+.dp-ico svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+
+.dpm{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:16px;background:rgba(var(--sh),.4);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);font-family:"Poppins",system-ui,sans-serif;font-weight:300;color:var(--ink)}
+.dpc{position:relative;overflow:hidden;width:min(318px,100%);background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:14px 14px 10px;box-shadow:0 24px 60px -16px rgba(var(--sh),.6)}
+.dpc > *{position:relative;z-index:1}
+.dpc > .brush{position:absolute;z-index:0;width:36%;opacity:.55}
+.dp-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:8px}
+.dp-nav{width:32px;height:32px;flex:none;border-radius:50%;border:1px solid var(--rose);background:var(--glass);color:var(--ink);font-size:18px;line-height:1;cursor:pointer;display:grid;place-items:center;padding:0 0 2px}
+.dp-nav:hover{background:rgba(var(--tint),.3)}
+.dp-title{flex:1;border:0;background:transparent;color:var(--ink);font-family:"Chorus",Georgia,serif;font-size:22px;line-height:1.2;cursor:pointer;padding:4px 6px;border-radius:10px}
+.dp-title:hover{background:rgba(var(--tint),.2)}
+.dp-wd,.dp-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center}
+.dp-wd span{font-weight:500;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--rose);padding:4px 0}
+.dp-d{aspect-ratio:1;border:1px solid transparent;border-radius:50%;background:transparent;color:var(--ink);font-size:13px;font-weight:400;cursor:pointer;padding:0;display:grid;place-items:center;min-width:0}
+.dp-d:hover,.dp-c:hover{background:rgba(var(--tint),.28)}
+.dp-d.today,.dp-c.today{border-color:var(--rose)}
+.dp-d.sel,.dp-c.sel{background:var(--rose);color:var(--on-fill);border-color:var(--rose)}
+.dp-grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:6px 0 2px}
+.dp-c{height:42px;border:1px solid transparent;border-radius:999px;background:transparent;color:var(--ink);font-size:13px;font-weight:400;cursor:pointer;padding:0}
+.dp-foot{display:flex;justify-content:space-between;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
+.dp-foot button{border:0;background:transparent;color:var(--rose);font-size:12px;font-weight:500;padding:6px 10px;border-radius:999px;cursor:pointer}
+.dp-foot button:hover{background:rgba(var(--tint),.25)}
+.dpm button:focus-visible{outline:2px solid var(--rose);outline-offset:1px}
+@media print{.dpm{display:none!important}}
