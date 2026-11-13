@@ -221,7 +221,8 @@
   var single = false, isOpen = false, busy = false, curPage = 0;
 
   function layout() {
-    var W = window.innerWidth, H = window.innerHeight;
+    var vv = window.visualViewport, de = document.documentElement;
+    var W = Math.min(window.innerWidth, de.clientWidth || window.innerWidth), H = window.innerHeight;
     single = W < 820;
     var availH = H - 170, pw, ph;
     if (single) { pw = Math.min(W - 24, 470); ph = Math.min(availH, 780); }
@@ -616,9 +617,7 @@
     var id = TH.g + '-' + TH.m;
     root.setAttribute('data-theme', id);
     var mt = document.querySelector('meta[name="theme-color"]'); if (mt) mt.setAttribute('content', META[id]);
-    Array.prototype.forEach.call(document.querySelectorAll('[data-gender]'), function (b) {
-      b.setAttribute('aria-pressed', String(b.dataset.gender === TH.g));
-    });
+    $('#btnGender').setAttribute('aria-label', TH.g === 'her' ? 'Ganti ke tema biru' : 'Ganti ke tema merah muda');
     $('#btnMode').setAttribute('aria-label', TH.m === 'dark' ? 'Ganti ke mode terang' : 'Ganti ke mode gelap');
   }
   function setTheme(patch) {
@@ -628,7 +627,7 @@
   }
   $('#themeSwitch').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
-    if (b.dataset.gender) setTheme({ g: b.dataset.gender });
+    if (b.id === 'btnGender') setTheme({ g: TH.g === 'her' ? 'him' : 'her' });
     else if (b.id === 'btnMode') setTheme({ m: TH.m === 'dark' ? 'light' : 'dark' });
   });
   var prevTheme = null; /* hasil cetak selalu versi terang */
@@ -678,6 +677,8 @@
 
   layout(); curPage = single ? -1 : 0; render(); updateCoverBack(); refreshResume();
   checkOrient(); lockPortrait();
+  window.addEventListener('load', function () { if (!typingNow()) applyResize(); });
+  [150, 500, 1200].forEach(function (t) { setTimeout(function () { if (!busy && !typingNow() && window.innerWidth !== lastW) applyResize(); }, t); });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () {
     var a = document.activeElement, tg = a && a.tagName;
     if (busy || dp || tg === 'TEXTAREA' || tg === 'INPUT') return;
