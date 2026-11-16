@@ -4,10 +4,15 @@
   /* ==========================================================
      1. ISI JURNAL (ubah teks di sini kalau mau mengedit isi)
      ========================================================== */
-  var DAYS = window.JURNAL_DAYS || [];
+  var KOND = (window.JURNAL_KONDISI || []).map(function (k) {
+    return { id: k.id, nama: k.nama, ket: k.ket, intro: k.intro, days: k.hari.map(function (h) { return { tema: h[0], q: h[1], step: h[2], doa: h[3] }; }) };
+  });
+  function chosen() { for (var i = 0; i < KOND.length; i++) if (KOND[i].id === S.kondisi) return KOND[i]; return null; }
+  function cond() { return chosen() || KOND[0]; }
+  function days() { return cond().days; }
   var deferredPrompt = null;
   var IOS = /iphone|ipad|ipod/i.test(navigator.userAgent), STANDALONE = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone;
-  var N = 21; /* jumlah halaman: 0 = Sebelum Mulai ... 20 = Simpan & Lanjutkan */
+  var N = 23; /* jumlah halaman: 0 = Pilih Kondisi Hati ... 22 = Simpan & Lanjutkan */
 
   /* ==========================================================
      2. PENYIMPANAN (di browser perangkat ini saja)
@@ -15,6 +20,7 @@
   var KEY = 'jurnal-refleksi-cinta-v1';
   var S = {};
   try { S = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { S = {}; }
+  if (!S.kondisi) { for (var q0 = 1; q0 <= 7; q0++) if (S['d' + q0 + '_text'] && S['d' + q0 + '_text'].trim()) { S.kondisi = 'patah'; break; } }
   var saveTimer, savedTimer;
   function saveNow() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
   function save() {
@@ -119,6 +125,31 @@
         '<div class="divider"></div>' +
         (mode === 'print' ? '' : '<p class="small">Geser ke kiri atau ketuk › untuk mulai. Namamu juga tampil di halaman “Catatan penting”.</p>') + '</div>';
     } else if (i === 0) {
+      var cur = chosen();
+      h += '<div class="eyebrow">Mulai dari sini</div><h2 class="h1">Apa yang sedang hatimu rasakan?</h2><div class="divider"></div>';
+      h += '<p class="p sm">Pilih satu yang paling dekat dengan keadaanmu hari ini. Renungan tujuh harinya akan menyesuaikan.</p>';
+      if (mode === 'print') h += '<div class="lab">Kondisi hatiku</div><p class="q">' + esc(cur ? cur.nama : '-') + '</p>';
+      else {
+        h += '<div class="chips">';
+        KOND.forEach(function (k) { h += '<button type="button" class="chip' + (cur && cur.id === k.id ? ' on' : '') + '" data-kond="' + k.id + '" aria-pressed="' + (cur && cur.id === k.id ? 'true' : 'false') + '">' + esc(k.nama) + '</button>'; });
+        h += '</div>';
+        h += cur ? '<p class="small" style="text-align:center">' + esc(cur.ket) + '</p>' : '<p class="small" style="text-align:center">Belum ada yang dipilih. Ketuk salah satu di atas.</p>';
+      }
+    } else if (i === 1) {
+      var c1 = chosen();
+      if (!c1) {
+        h += '<div class="eyebrow">Kondisi hatimu</div><h2 class="h1">Belum memilih</h2><div class="divider"></div>';
+        h += '<div class="note"><p class="p">Kembali ke halaman sebelumnya untuk memilih kondisi hatimu, supaya renungannya sesuai denganmu.</p></div>';
+        if (mode !== 'print') h += '<div class="chips"><button type="button" class="chip" data-goto="0">Pilih kondisi hati</button></div>';
+      } else {
+        h += '<div class="eyebrow">Kondisi hatimu</div><h2 class="h1">' + esc(c1.nama) + '</h2><div class="divider"></div>';
+        h += '<div class="note"><p class="p">' + esc(c1.intro) + '</p></div>';
+        h += '<div class="lab">Tujuh hari yang menanti</div><ol class="steps">';
+        c1.days.forEach(function (d, k) { h += '<li><b>' + (k + 1) + '</b><span>' + esc(d.tema) + '</span></li>'; });
+        h += '</ol>';
+        if (mode !== 'print') h += '<p class="small">Ingin mengganti kondisi? <button type="button" class="chip" data-goto="0">Ubah pilihan</button></p>';
+      }
+    } else if (i === 2) {
       h += '<div class="eyebrow">Sebelum mulai</div><h2 class="h1">Cara memakainya</h2><div class="divider"></div>';
       h += '<ol class="steps">' +
         '<li><b>1</b><span>Sediakan 10–15 menit setiap hari, di waktu yang paling tenang bagimu.</span></li>' +
@@ -127,22 +158,22 @@
         '<li><b>4</b><span>Jujur lebih penting daripada indah. Boleh melewatkan satu hari, lanjutkan esok.</span></li></ol>';
       h += '<div class="lab">Tentang doa-doa di jurnal ini</div>' +
         '<p class="p">Doa pendek di setiap halaman adalah doa pribadi yang disusun dengan bahasa sederhana, bukan doa dari riwayat tertentu. Kamu boleh mengubahnya dengan kata-katamu sendiri, dan menambahkan doa yang kamu hafal.</p>';
-    } else if (i === 1) {
+    } else if (i === 3) {
       h += '<div class="eyebrow">Catatan penting</div><h2 class="h1">Sebelum menulis</h2><div class="divider"></div>';
       h += '<div class="note"><p class="p">Jurnal ini adalah ruang untuk berefleksi, bukan pengganti konseling profesional maupun nasihat dari ulama. Jika hatimu terasa terlalu berat, atau muncul keinginan menyakiti diri, segera bicarakan dengan orang yang kamu percaya atau temui tenaga profesional.</p></div>';
       h += field('Jurnal ini milik', 'name', 'text', mode);
       h += '<div class="row2">' + field('Mulai', 'start', 'date', mode) + field('Selesai', 'end', 'date', mode) + '</div>';
       h += '<p class="small">Tulisanmu tersimpan di browser perangkat ini saja dan tidak dikirim ke mana pun. Unduh cadangannya di halaman terakhir agar tidak hilang saat data browser dibersihkan.</p>';
-    } else if (i === 2) {
+    } else if (i === 4) {
       h += '<div class="eyebrow">Niatku</div><h2 class="h1">Mengapa aku di sini</h2><div class="divider"></div>';
       h += '<div class="lab">Niatku mengikuti jurnal ini</div><div class="lined-wrap">' + ta('niat', 'Tulis niatmu di sini…', mode) + '</div>';
       if (mode !== 'print') {
         h += '<div class="lab">Daftar isi</div><div class="chips">';
-        for (var n = 1; n <= 7; n++) h += '<button type="button" class="chip' + (dayWritten(n) ? ' done' : '') + '" data-goto="' + (2 * n + 1) + '">Hari ' + n + '</button>';
-        h += '<button type="button" class="chip" data-goto="17">Refleksi akhir</button></div>';
+        for (var n = 1; n <= 7; n++) h += '<button type="button" class="chip' + (dayWritten(n) ? ' done' : '') + '" data-goto="' + (2 * n + 3) + '">Hari ' + n + '</button>';
+        h += '<button type="button" class="chip" data-goto="19">Refleksi akhir</button></div>';
       }
-    } else if (i >= 3 && i <= 16) {
-      var n2 = Math.floor((i - 3) / 2) + 1, d = DAYS[n2 - 1];
+    } else if (i >= 5 && i <= 18) {
+      var n2 = Math.floor((i - 5) / 2) + 1, d = days()[n2 - 1];
       if (i % 2 === 1) { /* halaman kiri: renungan */
         h += '<div class="eyebrow">Hari ' + n2 + ' dari 7</div><h2 class="h1">' + esc(d.tema) + '</h2><div class="divider"></div>';
         h += '<div class="lab" style="text-align:center">Renungan</div><p class="q">' + esc(d.q) + '</p>';
@@ -153,15 +184,15 @@
         h += '<div class="lab">Tuliskan di sini</div><div class="lined-wrap">' + ta('d' + n2 + '_text', 'Tulis apa adanya…', mode) + '</div>';
         h += '<div class="lab">Hatiku hari ini</div>' + mood('d' + n2 + '_mood', mode);
       }
-    } else if (i === 17) {
+    } else if (i === 19) {
       h += '<div class="eyebrow">Refleksi akhir</div><h2 class="h1">Setelah 7 hari</h2><div class="divider"></div>';
       h += '<div class="lab">Apa yang berubah dalam hatiku?</div><div class="lined-wrap">' + ta('f1', 'Tulis di sini…', mode) + '</div>';
       h += '<div class="lab">Satu hal yang kupelajari tentang diriku</div><div class="lined-wrap">' + ta('f2', 'Tulis di sini…', mode) + '</div>';
-    } else if (i === 18) {
+    } else if (i === 20) {
       h += '<div class="eyebrow">Refleksi akhir</div><h2 class="h1">Melangkah</h2><div class="divider"></div>';
-      h += '<div class="lab">Niat cintaku ke depan</div><div class="lined-wrap">' + ta('f3', 'Tulis di sini…', mode) + '</div>';
+      h += '<div class="lab">Niat untuk hatiku ke depan</div><div class="lined-wrap">' + ta('f3', 'Tulis di sini…', mode) + '</div>';
       h += '<div class="lab">Doa penutupku</div><div class="lined-wrap">' + ta('f4', 'Tulis doamu di sini…', mode) + '</div>';
-    } else if (i === 19) {
+    } else if (i === 21) {
       h += '<div style="margin:auto 0;display:flex;flex-direction:column;gap:16px;align-items:center;text-align:center">' +
         '<h2 class="h1">Terima kasih<br>sudah jujur pada hatimu</h2><div class="divider"></div>' +
         '<p class="q" style="color:var(--soft)">Tidak semua yang kamu tulis harus selesai. Cukup bahwa kamu berani menuliskannya. Hati yang mau berhenti sejenak untuk jujur, sudah sedang pulang.</p>' +
@@ -185,7 +216,7 @@
     return h;
   }
   /* Halaman yang isinya harus muat tanpa scroll: ukuran diperkecil otomatis kalau layar pendek */
-  var FIT = {}, FITP = { 1: 1, 20: 1 }, TIGHT = { 20: 1 };
+  var FIT = {}, FITP = { 0: 1, 1: 1, 3: 1, 22: 1 }, TIGHT = { 22: 1 };
   function fitU(i) {
     if (!FITP[i]) return null;
     if (i in FIT) return FIT[i];
@@ -337,10 +368,10 @@
 
   /* ---------- Daftar isi ---------- */
   function buildToc() {
-    var items = [['Sebelum mulai', 0], ['Catatan & niat', 1]];
+    var items = [['Kondisi hati', 0], ['Cara memakai', 2], ['Catatan & niat', 3]];
     if (single) items.unshift(['Jurnal ini milik', -1]);
-    for (var n = 1; n <= 7; n++) items.push(['Hari ' + n + ' · ' + DAYS[n - 1].tema, 2 * n + 1, dayWritten(n)]);
-    items.push(['Refleksi akhir', 17], ['Terima kasih', 19], ['Simpan & lanjutkan', 20]);
+    for (var n = 1; n <= 7; n++) items.push(['Hari ' + n + ' · ' + days()[n - 1].tema, 2 * n + 3, dayWritten(n)]);
+    items.push(['Refleksi akhir', 19], ['Terima kasih', 21], ['Simpan & lanjutkan', 22]);
     toc.innerHTML = items.map(function (it) {
       return '<button type="button" data-goto="' + it[1] + '">' + esc(it[0]) + (it[2] ? '<small>• sudah ditulis</small>' : '') + '</button>';
     }).join('');
@@ -350,10 +381,11 @@
      6. UNDUH, CETAK, HAPUS
      ========================================================== */
   function exportText() {
-    var t = 'JURNAL REFLEKSI CINTA · 7 HARI MERAPIKAN HATI\n';
+    var t = 'JURNAL REFLEKSI HATI · 7 HARI MERAPIKAN HATI\n';
+    t += 'Kondisi hati: ' + (chosen() ? chosen().nama : '-') + '\n';
     t += 'Milik: ' + (S.name || '-') + '\nMulai: ' + (fmtDate(S.start) || '-') + '   Selesai: ' + (fmtDate(S.end) || '-') + '\n';
     t += '\nNIATKU:\n' + (S.niat || '(belum ditulis)') + '\n';
-    DAYS.forEach(function (d, i) {
+    days().forEach(function (d, i) {
       var n = i + 1;
       t += '\n\n=== HARI ' + n + ': ' + d.tema.toUpperCase() + ' ===\nRenungan: ' + d.q +
            '\n\nTulisanku:\n' + (S['d' + n + '_text'] || '(belum ditulis)') +
@@ -363,11 +395,11 @@
     });
     t += '\n\n=== REFLEKSI AKHIR ===\nApa yang berubah dalam hatiku?\n' + (S.f1 || '-') +
          '\n\nSatu hal yang kupelajari tentang diriku:\n' + (S.f2 || '-') +
-         '\n\nNiat cintaku ke depan:\n' + (S.f3 || '-') + '\n\nDoa penutupku:\n' + (S.f4 || '-') +
+         '\n\nNiat untuk hatiku ke depan:\n' + (S.f3 || '-') + '\n\nDoa penutupku:\n' + (S.f4 || '-') +
          '\n\n—\nkurniapedia.my.id\n';
     var blob = new Blob([t], { type: 'text/plain;charset=utf-8' });
     var a = document.createElement('a');
-    a.href = URL.createObjectURL(blob); a.download = 'jurnal-refleksi-cinta.txt';
+    a.href = URL.createObjectURL(blob); a.download = 'jurnal-refleksi-hati.txt';
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
   }
@@ -409,9 +441,16 @@
     if (t && t.type === 'checkbox' && t.dataset.k) { S[t.dataset.k] = t.checked; save(); }
   });
   document.addEventListener('click', function (e) {
-    var el = e.target.closest ? e.target.closest('[data-mood],[data-goto],[data-act],[data-dp]') : null;
+    var el = e.target.closest ? e.target.closest('[data-kond],[data-mood],[data-goto],[data-act],[data-dp]') : null;
     if (!el) { if (!e.target.closest || !e.target.closest('.toc,#btnToc')) toc.hidden = true; return; }
-    if (el.dataset.mood) {
+    if (el.dataset.kond) {
+      var nid = el.dataset.kond, old = chosen();
+      if (old && old.id === nid) { goTo(1); return; }
+      var any = false; for (var q = 1; q <= 7; q++) if (dayWritten(q)) any = true;
+      if (any && !confirm('Mengganti kondisi hati akan mengubah renungan setiap hari. Tulisanmu tetap tersimpan, tetapi mungkin tidak lagi sesuai dengan pertanyaan yang baru. Lanjutkan?')) return;
+      S.kondisi = nid; saveNow(); FIT = {}; render(); updateProg();
+      setTimeout(function () { goTo(1); }, 450);
+    } else if (el.dataset.mood) {
       var k = el.dataset.k, n = +el.dataset.mood;
       S[k] = (+S[k] === n) ? 0 : n; save();
       var group = el.parentNode.querySelectorAll('button');
@@ -650,13 +689,13 @@
   function updateProg() {
     var p = $('#prog'); p.hidden = !isOpen; if (!isOpen) return;
     var h = '';
-    for (var n = 1; n <= 7; n++) h += '<button type="button" class="seg' + (dayWritten(n) ? ' on' : '') + '" data-goto="' + (2 * n + 1) + '" aria-label="Hari ' + n + (dayWritten(n) ? ', sudah ditulis' : '') + '"></button>';
+    for (var n = 1; n <= 7; n++) h += '<button type="button" class="seg' + (dayWritten(n) ? ' on' : '') + '" data-goto="' + (2 * n + 3) + '" aria-label="Hari ' + n + (dayWritten(n) ? ', sudah ditulis' : '') + '"></button>';
     $('#progSegs').innerHTML = h; $('#progTxt').textContent = daysDone() + ' dari 7 hari ditulis';
   }
-  var OKKEY = /^(name|start|end|niat|f[1-4]|d[1-7]_(text|step|mood)|_pos)$/;
+  var OKKEY = /^(kondisi|name|start|end|niat|f[1-4]|d[1-7]_(text|step|mood)|_pos)$/;
   function exportJSON() {
-    var blob = new Blob([JSON.stringify({ app: 'jurnal-refleksi-cinta', version: 1, exportedAt: new Date().toISOString(), data: S }, null, 2)], { type: 'application/json' });
-    var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'jurnal-refleksi-cinta-cadangan.json';
+    var blob = new Blob([JSON.stringify({ app: 'jurnal-refleksi-hati', version: 1, exportedAt: new Date().toISOString(), data: S }, null, 2)], { type: 'application/json' });
+    var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'jurnal-refleksi-hati-cadangan.json';
     document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
     toast('Cadangan tersimpan');
   }
@@ -666,9 +705,9 @@
     r.onload = function () {
       try {
         var o = JSON.parse(r.result);
-        if (!o || o.app !== 'jurnal-refleksi-cinta' || typeof o.data !== 'object') throw 0;
+        if (!o || (o.app !== 'jurnal-refleksi-hati' && o.app !== 'jurnal-refleksi-cinta') || typeof o.data !== 'object') throw 0;
         var d = {};
-        for (var k in o.data) if (OKKEY.test(k)) { var v = o.data[k]; if ((k === 'start' || k === 'end') && !(typeof v === 'string' && (v === '' || fmtDate(v)))) continue; if (typeof v === 'string') d[k] = v.slice(0, 20000); else if (typeof v === 'number' || typeof v === 'boolean') d[k] = v; }
+        for (var k in o.data) if (OKKEY.test(k)) { var v = o.data[k]; if ((k === 'start' || k === 'end') && !(typeof v === 'string' && (v === '' || fmtDate(v)))) continue; if (k === 'kondisi' && !KOND.some(function (x) { return x.id === v; })) continue; if (typeof v === 'string') d[k] = v.slice(0, 20000); else if (typeof v === 'number' || typeof v === 'boolean') d[k] = v; }
         if (!confirm('Pulihkan cadangan ini? Tulisan yang ada sekarang akan diganti.')) return;
         S = d; saveNow(); updateCoverBack(); render(); refreshResume(); toast('Cadangan dipulihkan');
       } catch (x) { toast('Berkas cadangan tidak dikenali'); }

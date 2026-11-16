@@ -326,3 +326,8 @@ html.rot .stage,html.rot .theme-switch,html.rot .toast{visibility:hidden}
 .cover .back .owner{text-align:center;background:transparent;font-size:max(16px,calc(30px * var(--u)));color:var(--ink);border-top:0;border-left:0;border-right:0}
 input,textarea{-webkit-user-select:text;user-select:text;-webkit-appearance:none;appearance:none}
 .book.opened .cover .front{visibility:hidden;pointer-events:none}
+
+/* pilihan kondisi hati */
+.chip.on{background:var(--rose);color:var(--on-fill);border-color:var(--rose)}
+.chip.on.done::after{color:var(--on-fill)}
+.chips{justify-content:center}
