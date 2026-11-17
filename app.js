@@ -418,8 +418,8 @@
     setTimeout(function () { window.print(); }, 250);
   }
   function resetAll() {
-    if (!confirm('Hapus semua tulisanmu di jurnal ini? Tindakan ini tidak bisa dibatalkan.')) return;
-    S = {}; saveNow(); updateCoverBack(); render(); refreshResume();
+    ask({ icon: 'trash', danger: true, title: 'Hapus semua tulisan?', msg: 'Semua tulisanmu di jurnal ini akan dihapus dan tidak bisa dikembalikan. Simpan cadangan dulu jika kamu masih ingin menyimpannya.', yes: 'Ya, hapus', no: 'Batal' },
+      function () { S = {}; saveNow(); updateCoverBack(); render(); refreshResume(); });
   }
 
   /* ==========================================================
@@ -450,9 +450,12 @@
       var nid = el.dataset.kond, old = chosen();
       if (old && old.id === nid) { goTo(1); return; }
       var any = false; for (var q = 1; q <= 7; q++) if (dayWritten(q)) any = true;
-      if (any && !confirm('Mengganti kondisi hati akan mengubah renungan setiap hari. Tulisanmu tetap tersimpan, tetapi mungkin tidak lagi sesuai dengan pertanyaan yang baru. Lanjutkan?')) return;
-      S.kondisi = nid; saveNow(); FIT = {}; render(); updateProg();
-      setTimeout(function () { goTo(1); }, 450);
+      var pick = function () {
+        S.kondisi = nid; saveNow(); FIT = {}; render(); updateProg();
+        setTimeout(function () { goTo(1); }, 450);
+      };
+      if (any) ask({ icon: 'swap', title: 'Ganti kondisi hati?', msg: 'Renungan tujuh harinya akan berubah mengikuti kondisi yang baru. Tulisanmu tetap tersimpan, tetapi mungkin tidak lagi sesuai dengan pertanyaan yang baru.', yes: 'Ya, ganti', no: 'Tetap di sini' }, pick);
+      else pick();
     } else if (el.dataset.mood) {
       var k = el.dataset.k, n = +el.dataset.mood;
       S[k] = (+S[k] === n) ? 0 : n; save();
@@ -714,6 +717,39 @@
      7c. PROGRES, CADANGAN JSON, NOTIFIKASI, PASANG APP
      ========================================================== */
   var toastEl = $('#toast'), toastT;
+
+  /* Dialog konfirmasi bertema (pengganti confirm bawaan browser) */
+  var DLG_ICO = {
+    swap: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h13M13 4l4 4-4 4M20 16H7M11 12l-4 4 4 4"/></svg>',
+    trash: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6.5 7l1 13h9l1-13M10 11v6M14 11v6"/></svg>',
+    restore: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.6-5.9M4 4v4.5h4.5M12 8v4.5l3 1.8"/></svg>'
+  };
+  function ask(o, onOk) {
+    var prev = document.activeElement, box = document.createElement('div');
+    box.className = 'dlg';
+    box.innerHTML = '<div class="dlg-card" role="alertdialog" aria-modal="true" aria-labelledby="dlgT" aria-describedby="dlgM">' +
+      '<svg class="brush tr" aria-hidden="true"><use href="#brushTR"/></svg>' +
+      '<div class="dlg-in"><div class="dlg-ico">' + (DLG_ICO[o.icon] || DLG_ICO.swap) + '</div>' +
+      '<h3 class="dlg-t" id="dlgT">' + esc(o.title) + '</h3><p class="dlg-m" id="dlgM">' + esc(o.msg) + '</p>' +
+      '<div class="dlg-a"><button type="button" class="btn dlg-no">' + esc(o.no || 'Batal') + '</button>' +
+      '<button type="button" class="btn ' + (o.danger ? 'danger' : 'primary') + ' dlg-yes">' + esc(o.yes || 'Lanjutkan') + '</button></div></div></div>';
+    document.body.appendChild(box);
+    var yes = box.querySelector('.dlg-yes'), no = box.querySelector('.dlg-no'), done = false;
+    function close(ok) {
+      if (done) return; done = true;
+      box.classList.remove('on');
+      setTimeout(function () { box.remove(); try { if (prev && prev.focus) prev.focus({ preventScroll: true }); } catch (e) {} if (ok && onOk) onOk(); }, 200);
+    }
+    yes.addEventListener('click', function () { close(true); });
+    no.addEventListener('click', function () { close(false); });
+    box.addEventListener('mousedown', function (e) { if (e.target === box) close(false); });
+    box.addEventListener('keydown', function (e) {
+      e.stopPropagation();
+      if (e.key === 'Escape') { e.preventDefault(); close(false); }
+      else if (e.key === 'Tab') { e.preventDefault(); (document.activeElement === no ? yes : no).focus(); }
+    });
+    requestAnimationFrame(function () { box.classList.add('on'); no.focus({ preventScroll: true }); });
+  }
   function toast(m) { toastEl.textContent = m; toastEl.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(function () { toastEl.classList.remove('on'); }, 2600); }
   function updateProg() {
     var p = $('#prog'); p.hidden = !isOpen; if (!isOpen) return;
@@ -737,8 +773,8 @@
         if (!o || (o.app !== 'jurnal-refleksi-hati' && o.app !== 'jurnal-refleksi-cinta') || typeof o.data !== 'object') throw 0;
         var d = {};
         for (var k in o.data) if (OKKEY.test(k)) { var v = o.data[k]; if ((k === 'start' || k === 'end') && !(typeof v === 'string' && (v === '' || fmtDate(v)))) continue; if (k === 'kondisi' && !KOND.some(function (x) { return x.id === v; })) continue; if (typeof v === 'string') d[k] = v.slice(0, 20000); else if (typeof v === 'number' || typeof v === 'boolean') d[k] = v; }
-        if (!confirm('Pulihkan cadangan ini? Tulisan yang ada sekarang akan diganti.')) return;
-        S = d; saveNow(); updateCoverBack(); render(); refreshResume(); toast('Cadangan dipulihkan');
+        ask({ icon: 'restore', title: 'Pulihkan cadangan?', msg: 'Tulisan yang ada sekarang akan diganti dengan isi cadangan ini.', yes: 'Ya, pulihkan', no: 'Batal' },
+          function () { S = d; saveNow(); updateCoverBack(); render(); refreshResume(); toast('Cadangan dipulihkan'); });
       } catch (x) { toast('Berkas cadangan tidak dikenali'); }
     };
     r.readAsText(f);

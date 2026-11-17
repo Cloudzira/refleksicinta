@@ -345,3 +345,23 @@ textarea.lined::placeholder,.line-input::placeholder{font-weight:300}
 .theme-switch #btnFull.on .i-shrink{display:block}
 .theme-switch #btnFull[hidden]{display:none}
 .theme-switch #btnFull.on{color:var(--on-fill)}
+
+/* ---------- Dialog konfirmasi bertema ---------- */
+.dlg{position:fixed;inset:0;z-index:90;display:grid;place-items:center;padding:18px;background:rgba(var(--sh),.45);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);font-family:"Poppins",system-ui,sans-serif;font-weight:300;color:var(--ink);opacity:0;transition:opacity .2s ease}
+.dlg.on{opacity:1}
+.dlg-card{position:relative;width:min(100%,390px);overflow:hidden;background:var(--paper);border:1px solid var(--rose);border-radius:22px;box-shadow:0 28px 70px -20px rgba(var(--sh),.65),0 0 0 6px rgba(var(--tint),.14);transform:translateY(12px) scale(.97);transition:transform .28s cubic-bezier(.2,.8,.3,1)}
+.dlg.on .dlg-card{transform:none}
+.dlg-card .brush{width:52%}
+.dlg-in{position:relative;z-index:1;padding:30px 24px 22px;text-align:center}
+.dlg-ico{width:52px;height:52px;margin:0 auto 12px;border-radius:50%;display:grid;place-items:center;background:rgba(var(--tint),.24);border:1px solid var(--line);color:var(--rose)}
+.dlg-ico svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.dlg-t{font-family:"Chorus",Georgia,serif;font-weight:400;font-size:29px;line-height:1.1;margin:0 0 9px}
+.dlg-card .divider{margin:10px auto 12px}
+.dlg-m{margin:0;font-size:.86rem;line-height:1.7;color:var(--soft)}
+.dlg-a{display:flex;gap:10px;margin-top:22px}
+.dlg-a .btn{flex:1 1 0;min-width:0;padding:12px 10px;font-size:.84rem;line-height:1.25}
+.dlg-a .btn.danger{font-size:.84rem;background:rgba(var(--tint),.14)}
+.dlg-a .btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+@media (max-width:360px){.dlg-a{flex-direction:column-reverse}}
+@media (prefers-reduced-motion:reduce){.dlg,.dlg-card{transition-duration:.01s}}
+@media print{.dlg{display:none!important}}
