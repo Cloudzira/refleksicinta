@@ -365,3 +365,32 @@ textarea.lined::placeholder,.line-input::placeholder{font-weight:300}
 @media (max-width:360px){.dlg-a{flex-direction:column-reverse}}
 @media (prefers-reduced-motion:reduce){.dlg,.dlg-card{transition-duration:.01s}}
 @media print{.dlg{display:none!important}}
+
+/* ===== Gerbang kode pembuka jurnal ===== */
+.dlg.gate{overflow:auto;-webkit-overflow-scrolling:touch}
+.gate-card{margin:auto;width:min(100%,360px);border-color:var(--line);box-shadow:0 30px 80px -22px rgba(var(--sh),.7),0 0 0 7px rgba(var(--tint),.12)}
+.gate-card::after{content:"";position:absolute;inset:8px;border:1px solid var(--gold);border-radius:15px;pointer-events:none;z-index:2}
+.gate-card .dlg-in{padding:34px 26px 26px}
+.gate-ico{width:56px;height:56px;margin-bottom:14px;box-shadow:0 0 0 7px rgba(var(--tint),.12);position:relative}
+.gate-ico svg{width:26px;height:26px}
+.gate-ico .g-tick{opacity:0;stroke-dasharray:20;stroke-dashoffset:20}
+.gate-eb{font-size:.6rem;letter-spacing:.34em;text-indent:.34em;text-transform:uppercase;color:var(--soft);margin:0 0 7px;font-weight:400}
+.gate-card .dlg-t{font-size:31px;margin-bottom:10px}
+.gate-field{width:80%;margin:20px auto 0}
+.gate-in{width:100%;display:block;text-align:center;font:400 27px/1.25 "Chorus",Georgia,serif;letter-spacing:.3em;text-indent:.3em;color:var(--ink);background:transparent;border:0;border-bottom:1px solid var(--line);border-radius:0;padding:6px 0 7px;outline:0;transition:border-color .25s,box-shadow .25s}
+.gate-in::placeholder{font-size:18px;letter-spacing:.06em;text-indent:0;color:var(--soft);opacity:.5}
+.gate-in:focus{border-bottom-color:var(--rose);box-shadow:0 1px 0 0 var(--rose)}
+.gate-err{min-height:1.5em;margin:11px 0 0;font-size:.76rem;line-height:1.4;color:var(--danger);opacity:0;transition:opacity .25s}
+.gate-err.on{opacity:1}
+.gate-card .dlg-a{margin-top:14px}
+.gate-field.shake{animation:gateShake .44s cubic-bezier(.36,.07,.19,.97)}
+@keyframes gateShake{15%,60%{transform:translateX(-7px)}35%,85%{transform:translateX(7px)}}
+.gate-card.ok .gate-field,.gate-card.ok .gate-err,.gate-card.ok .dlg-a{display:none}
+.gate-card.ok .dlg-in{padding-bottom:34px}
+.gate-card.ok .gate-ico{background:var(--rose);color:var(--on-fill);border-color:var(--rose);animation:gateBeat .9s ease-out}
+.gate-card.ok .g-heart{fill:rgba(255,255,255,.18)}
+.gate-card.ok .g-tick{opacity:1;stroke-dashoffset:0;transition:stroke-dashoffset .5s .2s ease,opacity .2s .2s}
+@keyframes gateBeat{0%{transform:scale(.85)}35%{transform:scale(1.14)}60%{transform:scale(.97)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.gate-field.shake,.gate-card.ok .gate-ico{animation:none}.gate-card.ok .g-tick{transition:none}}
+@media (max-width:360px){.gate-card .dlg-in{padding:30px 20px 22px}.gate-in{font-size:24px}}
+.gate-card .dlg-m{text-wrap:balance}

@@ -473,10 +473,10 @@
     else if (el.dataset.act === 'reset') resetAll();
   });
 
-  cover.addEventListener('click', function (e) { if (e.target && e.target.tagName === 'INPUT') return; openBook(0); });
-  cover.addEventListener('keydown', function (e) { if (e.target && e.target.tagName === 'INPUT') return; if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openBook(0); } });
-  $('#btnOpen').addEventListener('click', function () { openBook(0); });
-  $('#btnResume').addEventListener('click', function () { openBook(S._pos || 0); });
+  cover.addEventListener('click', function (e) { if (e.target && e.target.tagName === 'INPUT') return; gateOpen(0); });
+  cover.addEventListener('keydown', function (e) { if (e.target && e.target.tagName === 'INPUT') return; if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); gateOpen(0); } });
+  $('#btnOpen').addEventListener('click', function () { gateOpen(0); });
+  $('#btnResume').addEventListener('click', function () { gateOpen(S._pos || 0); });
   $('#btnClose').addEventListener('click', closeBook);
   btnPrev.addEventListener('click', function () { goTo(prevPage()); });
   btnNext.addEventListener('click', function () { goTo(nextPage()); });
@@ -749,6 +749,64 @@
       else if (e.key === 'Tab') { e.preventDefault(); (document.activeElement === no ? yes : no).focus(); }
     });
     requestAnimationFrame(function () { box.classList.add('on'); no.focus({ preventScroll: true }); });
+  }
+  /* Gerbang pembuka: kode akses sebelum jurnal dibuka (disimpan sebagai sidik, bukan teks asli) */
+  var GATE_KEY = 'jurnal-unlock', GATE_H = '2td1ro-nwqxuq', unlocked = false;
+  function gh(s) { var x = 5381, y = 52711, i = s.length; while (i--) { var c = s.charCodeAt(i); x = (x * 33) ^ c; y = (y * 31) ^ c; } return (x >>> 0).toString(36) + '-' + (y >>> 0).toString(36); }
+  try { unlocked = localStorage.getItem(GATE_KEY) === GATE_H; } catch (e) {}
+  function gateOpen(target) {
+    if (isOpen || busy) return;
+    if (unlocked) { openBook(target); return; }
+    gate(function () { openBook(target); });
+  }
+  function gate(onOk) {
+    if (document.querySelector('.dlg.gate')) return;
+    var prev = document.activeElement, box = document.createElement('div');
+    box.className = 'dlg gate';
+    box.innerHTML = '<form class="dlg-card gate-card" role="dialog" aria-modal="true" aria-labelledby="gT" aria-describedby="gM" autocomplete="off" novalidate>' +
+      '<svg class="brush tr" aria-hidden="true"><use href="#brushTR"/></svg>' +
+      '<svg class="brush bl" aria-hidden="true"><use href="#brushTR"/></svg>' +
+      '<div class="dlg-in"><div class="dlg-ico gate-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="g-heart" d="M12 20.2S4.5 15.6 4.5 9.9a4.1 4.1 0 0 1 7.5-2.3 4.1 4.1 0 0 1 7.5 2.3c0 5.7-7.5 10.3-7.5 10.3z"/><path class="g-tick" d="M8.6 11.4l2.600 2.600 4.400-4.800"/></svg></div>' +
+      '<div class="gate-eb">sebelum membuka</div>' +
+      '<h3 class="dlg-t" id="gT">Kata Kunci Hati</h3><div class="divider"></div>' +
+      '<p class="dlg-m" id="gM">Tuliskan kode untuk mulai membuka jurnal.</p>' +
+      '<div class="gate-field"><input class="gate-in" id="gIn" type="text" maxlength="30" inputmode="text" enterkeyhint="go" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="tulis kodenya" aria-label="Kode akses" aria-describedby="gE"></div>' +
+      '<p class="gate-err" id="gE" role="alert"></p>' +
+      '<div class="dlg-a"><button type="button" class="btn dlg-no">Nanti saja</button>' +
+      '<button type="submit" class="btn primary dlg-yes">Buka jurnal</button></div></div></form>';
+    document.body.appendChild(box);
+    var card = box.firstChild, inp = box.querySelector('#gIn'), err = box.querySelector('#gE'), fld = box.querySelector('.gate-field'),
+        no = box.querySelector('.dlg-no'), yes = box.querySelector('.dlg-yes'), ttl = box.querySelector('#gT'), msg = box.querySelector('#gM'), done = false;
+    function close(ok) {
+      if (done) return; done = true;
+      box.classList.remove('on');
+      setTimeout(function () { box.remove(); if (ok) { if (onOk) onOk(); } else { try { if (prev && prev.focus) prev.focus({ preventScroll: true }); } catch (e) {} } }, 220);
+    }
+    function bad(t) {
+      err.textContent = t; err.classList.add('on');
+      fld.classList.remove('shake'); void fld.offsetWidth; fld.classList.add('shake');
+    }
+    card.addEventListener('submit', function (e) {
+      e.preventDefault(); if (done || card.classList.contains('ok')) return;
+      var v = inp.value.replace(/\s+/g, '').toLowerCase();
+      if (!v) { bad('Tuliskan kodenya dulu ya.'); inp.focus(); return; }
+      if (gh(v) !== GATE_H) { bad('Kode belum tepat. Coba lagi dengan tenang.'); inp.select(); return; }
+      unlocked = true; try { localStorage.setItem(GATE_KEY, GATE_H); } catch (x) {}
+      inp.blur(); card.classList.add('ok'); ttl.textContent = 'Selamat datang'; msg.textContent = 'Pintu hati sudah terbuka. Pelan-pelan saja.';
+      setTimeout(function () { close(true); }, 1250);
+    });
+    inp.addEventListener('input', function () { err.classList.remove('on'); });
+    no.addEventListener('click', function () { close(false); });
+    box.addEventListener('mousedown', function (e) { if (e.target === box && !card.classList.contains('ok')) close(false); });
+    box.addEventListener('keydown', function (e) {
+      e.stopPropagation();
+      if (e.key === 'Escape' && !card.classList.contains('ok')) { e.preventDefault(); close(false); }
+      else if (e.key === 'Tab') {
+        var f = [inp, no, yes], i = f.indexOf(document.activeElement);
+        e.preventDefault(); f[(i + (e.shiftKey ? f.length - 1 : 1)) % f.length].focus();
+      }
+    });
+    requestAnimationFrame(function () { box.classList.add('on'); try { inp.focus({ preventScroll: true }); } catch (e) {} });
   }
   function toast(m) { toastEl.textContent = m; toastEl.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(function () { toastEl.classList.remove('on'); }, 2600); }
   function updateProg() {
