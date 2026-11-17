@@ -7,6 +7,7 @@
   var KOND = (window.JURNAL_KONDISI || []).map(function (k) {
     return { id: k.id, nama: k.nama, ket: k.ket, intro: k.intro, days: k.hari.map(function (h) { return { tema: h[0], q: h[1], step: h[2], doa: h[3] }; }) };
   });
+  var STARTER = ['Mulailah dengan satu kalimat: “Hari ini aku merasa…”', 'Tidak perlu rapi. Tulis apa pun yang terlintas…', 'Pelan-pelan saja. Satu kalimat pun sudah cukup…', 'Ceritakan seperti kepada sahabat yang paling kamu percaya…', 'Apa yang ingin kamu katakan hari ini? Tulis saja…', 'Kamu aman di sini. Tulis apa adanya…', 'Apa yang ingin kamu sampaikan kepada dirimu hari ini?'];
   function chosen() { for (var i = 0; i < KOND.length; i++) if (KOND[i].id === S.kondisi) return KOND[i]; return null; }
   function cond() { return chosen() || KOND[0]; }
   function days() { return cond().days; }
@@ -127,13 +128,13 @@
     } else if (i === 0) {
       var cur = chosen();
       h += '<div class="eyebrow">Mulai dari sini</div><h2 class="h1">Apa yang sedang hatimu rasakan?</h2><div class="divider"></div>';
-      h += '<p class="p sm">Pilih satu yang paling dekat dengan keadaanmu hari ini. Renungan tujuh harinya akan menyesuaikan.</p>';
+      h += '<p class="p sm">Pilih satu yang paling dekat dengan keadaanmu hari ini. Tidak perlu sempurna, dan kamu boleh menggantinya kapan saja. Renungan tujuh harinya akan menyesuaikan.</p>';
       if (mode === 'print') h += '<div class="lab">Kondisi hatiku</div><p class="q">' + esc(cur ? cur.nama : '-') + '</p>';
       else {
         h += '<div class="chips">';
         KOND.forEach(function (k) { h += '<button type="button" class="chip' + (cur && cur.id === k.id ? ' on' : '') + '" data-kond="' + k.id + '" aria-pressed="' + (cur && cur.id === k.id ? 'true' : 'false') + '">' + esc(k.nama) + '</button>'; });
         h += '</div>';
-        h += cur ? '<p class="small" style="text-align:center">' + esc(cur.ket) + '</p>' : '<p class="small" style="text-align:center">Belum ada yang dipilih. Ketuk salah satu di atas.</p>';
+        h += cur ? '<p class="small" style="text-align:center">' + esc(cur.ket) + '</p>' : '<p class="small" style="text-align:center">Belum ada yang dipilih. Ketuk satu yang paling mewakili hatimu.</p>';
       }
     } else if (i === 1) {
       var c1 = chosen();
@@ -152,10 +153,10 @@
     } else if (i === 2) {
       h += '<div class="eyebrow">Sebelum mulai</div><h2 class="h1">Cara memakainya</h2><div class="divider"></div>';
       h += '<ol class="steps">' +
-        '<li><b>1</b><span>Sediakan 10–15 menit setiap hari, di waktu yang paling tenang bagimu.</span></li>' +
-        '<li><b>2</b><span>Baca renungan, lalu tulis apa adanya. Tidak ada jawaban yang benar atau salah.</span></li>' +
+        '<li><b>1</b><span>Sediakan 10–15 menit setiap hari, di waktu yang paling tenang bagimu. Kalau sedang sibuk, lima menit pun berarti.</span></li>' +
+        '<li><b>2</b><span>Baca renungan pelan-pelan, lalu tulis apa adanya. Tidak ada jawaban yang benar atau salah, dan tidak ada yang menilaimu.</span></li>' +
         '<li><b>3</b><span>Lakukan satu langkah kecil, lalu bacakan doa pendeknya dengan hatimu sendiri.</span></li>' +
-        '<li><b>4</b><span>Jujur lebih penting daripada indah. Boleh melewatkan satu hari, lanjutkan esok.</span></li></ol>';
+        '<li><b>4</b><span>Jujur lebih penting daripada indah. Boleh melewatkan satu hari, lanjutkan esok tanpa merasa bersalah.</span></li></ol>';
       h += '<div class="lab">Tentang doa-doa di jurnal ini</div>' +
         '<p class="p">Doa pendek di setiap halaman adalah doa pribadi yang disusun dengan bahasa sederhana, bukan doa dari riwayat tertentu. Kamu boleh mengubahnya dengan kata-katamu sendiri, dan menambahkan doa yang kamu hafal.</p>';
     } else if (i === 3) {
@@ -166,7 +167,7 @@
       h += '<p class="small">Tulisanmu tersimpan di browser perangkat ini saja dan tidak dikirim ke mana pun. Unduh cadangannya di halaman terakhir agar tidak hilang saat data browser dibersihkan.</p>';
     } else if (i === 4) {
       h += '<div class="eyebrow">Niatku</div><h2 class="h1">Mengapa aku di sini</h2><div class="divider"></div>';
-      h += '<div class="lab">Niatku mengikuti jurnal ini</div><div class="lined-wrap">' + ta('niat', 'Tulis niatmu di sini…', mode) + '</div>';
+      h += '<div class="lab">Niatku mengikuti jurnal ini</div><div class="lined-wrap">' + ta('niat', 'Mengapa aku ingin merapikan hatiku? Tulis dengan kata-katamu sendiri…', mode) + '</div>';
       if (mode !== 'print') {
         h += '<div class="lab">Daftar isi</div><div class="chips">';
         for (var n = 1; n <= 7; n++) h += '<button type="button" class="chip' + (dayWritten(n) ? ' done' : '') + '" data-goto="' + (2 * n + 3) + '">Hari ' + n + '</button>';
@@ -181,17 +182,17 @@
         h += '<div class="doa"><div class="lab">Doa pendek</div><p class="q">' + esc(d.doa) + '</p></div>';
       } else { /* halaman kanan: menulis */
         h += '<div class="eyebrow">Hari ' + n2 + ' · ' + esc(d.tema) + '</div>';
-        h += '<div class="lab">Tuliskan di sini</div><div class="lined-wrap">' + ta('d' + n2 + '_text', 'Tulis apa adanya…', mode) + '</div>';
+        h += '<div class="lab">Tuliskan perasaanmu</div><div class="lined-wrap">' + ta('d' + n2 + '_text', STARTER[n2 - 1], mode) + '</div>';
         h += '<div class="lab">Hatiku hari ini</div>' + mood('d' + n2 + '_mood', mode);
       }
     } else if (i === 19) {
       h += '<div class="eyebrow">Refleksi akhir</div><h2 class="h1">Setelah 7 hari</h2><div class="divider"></div>';
-      h += '<div class="lab">Apa yang berubah dalam hatiku?</div><div class="lined-wrap">' + ta('f1', 'Tulis di sini…', mode) + '</div>';
-      h += '<div class="lab">Satu hal yang kupelajari tentang diriku</div><div class="lined-wrap">' + ta('f2', 'Tulis di sini…', mode) + '</div>';
+      h += '<div class="lab">Apa yang berubah dalam hatiku?</div><div class="lined-wrap">' + ta('f1', 'Ceritakan perubahan sekecil apa pun yang kamu rasakan…', mode) + '</div>';
+      h += '<div class="lab">Satu hal yang kupelajari tentang diriku</div><div class="lined-wrap">' + ta('f2', 'Satu hal tentang dirimu yang baru kamu sadari…', mode) + '</div>';
     } else if (i === 20) {
       h += '<div class="eyebrow">Refleksi akhir</div><h2 class="h1">Melangkah</h2><div class="divider"></div>';
-      h += '<div class="lab">Niat untuk hatiku ke depan</div><div class="lined-wrap">' + ta('f3', 'Tulis di sini…', mode) + '</div>';
-      h += '<div class="lab">Doa penutupku</div><div class="lined-wrap">' + ta('f4', 'Tulis doamu di sini…', mode) + '</div>';
+      h += '<div class="lab">Niat untuk hatiku ke depan</div><div class="lined-wrap">' + ta('f3', 'Seperti apa aku ingin merawat hatiku ke depan…', mode) + '</div>';
+      h += '<div class="lab">Doa penutupku</div><div class="lined-wrap">' + ta('f4', 'Tulis doamu dengan kata-katamu sendiri…', mode) + '</div>';
     } else if (i === 21) {
       h += '<div style="margin:auto 0;display:flex;flex-direction:column;gap:16px;align-items:center;text-align:center">' +
         '<h2 class="h1">Terima kasih<br>sudah jujur pada hatimu</h2><div class="divider"></div>' +
@@ -218,7 +219,7 @@
   /* Halaman yang isinya harus muat tanpa scroll: ukuran diperkecil otomatis kalau layar pendek */
   var FIT = {}, FITP = { 0: 1, 1: 1, 3: 1, 22: 1 }, TIGHT = { 22: 1 };
   function fitU(i) {
-    if (!FITP[i]) return null;
+    if (!FITP[i] && (single || i < 0)) return null; /* mode dua halaman (lanskap): semua halaman dibuat muat tanpa scroll */
     if (i in FIT) return FIT[i];
     var u0 = parseFloat(document.documentElement.style.getPropertyValue('--u')) || 1;
     var box = document.createElement('div');
@@ -258,10 +259,12 @@
     var vv = window.visualViewport, de = document.documentElement;
     var W = Math.min(window.innerWidth, de.clientWidth || window.innerWidth), H = window.innerHeight;
     single = W < 820 || PHONE;
-    var availH = H - 170, pw, ph;
-    if (single) { pw = Math.min(W - 24, 470); ph = Math.min(availH, 780); }
-    else { ph = Math.min(availH, 780); pw = Math.min(Math.floor(ph * 0.74), Math.floor((W - 48) / 2)); }
-    var u = Math.max(0.78, Math.min(1.2, pw / 380));
+    var land = W > H, availH = H - 170, pw, ph, u;
+    if (single) { pw = Math.min(W - 24, 470); ph = Math.min(availH, 780); u = Math.max(0.78, Math.min(1.2, pw / 380)); }
+    else if (land) { /* lanskap (tablet/laptop): pakai lebar semaksimal mungkin, huruf lebih besar */
+      availH = H - 152; ph = Math.min(availH, 1200); pw = Math.min(Math.floor((W - 40) / 2), 900);
+      u = Math.max(0.9, Math.min(1.9, pw / 380, ph / 470));
+    } else { ph = Math.min(availH, 780); pw = Math.min(Math.floor(ph * 0.74), Math.floor((W - 48) / 2)); u = Math.max(0.78, Math.min(1.2, pw / 380)); }
     var r = document.documentElement.style;
     r.setProperty('--pw', pw + 'px'); r.setProperty('--ph', ph + 'px');
     r.setProperty('--cols', single ? 1 : 2); r.setProperty('--u', u.toFixed(3));
@@ -541,6 +544,32 @@
   function checkOrient() { document.documentElement.classList.toggle('rot', PHONE && isLand() && !typingNow()); }
   function lockPortrait() {
     try { if (PHONE && screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(function () {}); } catch (e) {}
+  }
+
+  /* Layar penuh */
+  var btnFull = $('#btnFull');
+  function fsNow() { return document.fullscreenElement || document.webkitFullscreenElement; }
+  function fsCan() { return !!(document.fullscreenEnabled || document.webkitFullscreenEnabled); }
+  function fsSync() {
+    if (!btnFull) return;
+    var on = !!fsNow();
+    btnFull.classList.toggle('on', on); btnFull.setAttribute('aria-pressed', on ? 'true' : 'false');
+    btnFull.setAttribute('aria-label', on ? 'Keluar dari layar penuh' : 'Layar penuh');
+    if (!on) { try { if (PHONE && screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) {} }
+  }
+  function onFs() { fsSync(); setTimeout(function () { applyResize(); checkOrient(); lockPortrait(); }, 250); }
+  if (btnFull) {
+    if (!fsCan() && STANDALONE) { btnFull.hidden = true; if (btnFull.nextElementSibling) btnFull.nextElementSibling.hidden = true; }
+    btnFull.addEventListener('click', function () {
+      if (!fsCan()) { toast(IOS ? 'Di iPhone: ketuk Bagikan, lalu “Tambah ke Layar Utama” untuk tampilan layar penuh.' : 'Browser ini belum mendukung layar penuh.'); return; }
+      if (fsNow()) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); return; }
+      var d = document.documentElement, rq = d.requestFullscreen || d.webkitRequestFullscreen, pr;
+      try { pr = rq.call(d); } catch (e) { toast('Layar penuh tidak bisa dibuka di sini.'); return; }
+      if (pr && pr.then) pr.then(lockPortrait, function () { toast('Layar penuh tidak bisa dibuka di sini.'); }); else lockPortrait();
+    });
+    document.addEventListener('fullscreenchange', onFs);
+    document.addEventListener('webkitfullscreenchange', onFs);
+    fsSync();
   }
   window.addEventListener('orientationchange', function () { setTimeout(checkOrient, 200); });
   if (screen.orientation && screen.orientation.addEventListener) screen.orientation.addEventListener('change', function () { setTimeout(checkOrient, 100); });

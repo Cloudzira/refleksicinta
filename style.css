@@ -331,3 +331,17 @@ input,textarea{-webkit-user-select:text;user-select:text;-webkit-appearance:none
 .chip.on{background:var(--rose);color:var(--on-fill);border-color:var(--rose)}
 .chip.on.done::after{color:var(--on-fill)}
 .chips{justify-content:center}
+
+/* ---------- Tulisan & ketikan pengguna: Poppins ---------- */
+textarea.lined,.ta-print{font:400 calc(15.5px * var(--u))/var(--lh) "Poppins",system-ui,sans-serif;letter-spacing:.005em}
+.line-input{font-family:"Poppins",system-ui,sans-serif;font-weight:400;font-size:calc(16px * var(--u));line-height:1.4}
+.owner-in,.cover .back .owner{font-family:"Poppins",system-ui,sans-serif;font-weight:400;font-size:max(15px,calc(22px * var(--u)))}
+textarea.lined::placeholder,.line-input::placeholder{font-weight:300}
+
+/* ---------- Tombol layar penuh ---------- */
+.theme-switch #btnFull{width:32px;padding:0;display:grid;place-items:center;color:var(--ink)}
+.theme-switch #btnFull .i-shrink{display:none}
+.theme-switch #btnFull.on .i-expand{display:none}
+.theme-switch #btnFull.on .i-shrink{display:block}
+.theme-switch #btnFull[hidden]{display:none}
+.theme-switch #btnFull.on{color:var(--on-fill)}
